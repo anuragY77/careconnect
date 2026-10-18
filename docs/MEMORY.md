@@ -6,12 +6,13 @@ Current state of the project. Update after every task. Permanent decisions are i
 Planning and documentation. No code written yet.
 
 ## Completed
+- TASK-004: backend skeleton (Spring Boot 4.1.1, Java 21, Maven; starters webmvc, validation, security, actuator, data-jpa, flyway; deny-by-default SecurityConfig; toolchain test). NOT compiled in the cloud (Maven Central blocked); owner verifies locally
 - TASK-002, TASK-003: repo at /home/claude/careconnect (backend, frontend, docs, ops), docs moved into docs/, git initialised on main
 - `PRD.md` first draft (SRS and OOAD format, 40 requirements, 34 use cases, diagrams, data model, traceability)
 - `ARCHITECTURE.md`, `PHASES.md`, `RULES.md`, `TASKS.md`, `DECISIONS.md`, `TEST_PLAN.md`, `SECURITY.md`, `DESIGN.md`, `PROMPTS.md`, `README.md`, `.env.example` drafted
 
 ## Current Task
-TASK-004: Spring Boot skeleton (TASK-001 PRD review with mentor still pending on owner's side; owner told to proceed).
+TASK-004 files written, waiting for owner's `mvn test` result from backend/ on his laptop. Next: TASK-005 Angular skeleton.
 
 ## Open Items
 - Final deadline and demo date (not given yet)

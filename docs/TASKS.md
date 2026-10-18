@@ -10,7 +10,7 @@ Legend: `[ ]` open, `[x]` done. Requirement ids refer to `PRD.md`.
 - [ ] TASK-001 Review and approve `PRD.md` with the mentor; record open items answers in `DECISIONS.md`
 - [x] TASK-002 Create repository layout: `backend/`, `frontend/`, `docs/`, root `README.md`, `.gitignore`
 - [x] TASK-003 Move documents into `docs/` and add `RULES.md`, `TASKS.md`, `MEMORY.md` links in README
-- [ ] TASK-004 Generate Spring Boot skeleton (Java LTS, Maven, Web, Security, Validation, JPA, PostgreSQL, Actuator, Flyway)
+- [x] TASK-004 Generate Spring Boot skeleton (Java LTS, Maven, Web, Security, Validation, JPA, PostgreSQL, Actuator, Flyway)
 - [ ] TASK-005 Generate Angular skeleton with Angular Material and routing
 - [ ] TASK-006 Create Docker Compose: postgres, mailpit, backend, frontend
 - [ ] TASK-007 Add `.env.example` and load configuration from environment
