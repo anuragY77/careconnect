@@ -1,0 +1,23 @@
+# env and secrets
+.env
+*.pem
+*.key
+
+# backend
+backend/target/
+*.class
+*.log
+
+# frontend
+frontend/node_modules/
+frontend/dist/
+frontend/.angular/
+
+# IDE and OS
+.idea/
+.vscode/
+*.iml
+.DS_Store
+
+# local data
+pgdata/
