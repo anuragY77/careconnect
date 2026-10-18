@@ -6,13 +6,15 @@ Current state of the project. Update after every task. Permanent decisions are i
 Planning and documentation. No code written yet.
 
 ## Completed
+- TASK-004 verified by owner: `mvn test` BUILD SUCCESS, 1 test passed, on Java 25.0.2 (project targets Java 21)
+- TASK-005: Angular 22.2 skeleton in frontend/ with Angular Material (M3 cyan/orange theme for now; exact teal brand theme from DESIGN.md still to do), self-hosted Inter font, app shell with training-use notice, `ng build` and `ng test` pass in the cloud (Node 24 used there)
 - TASK-004: backend skeleton (Spring Boot 4.1.1, Java 21, Maven; starters webmvc, validation, security, actuator, data-jpa, flyway; deny-by-default SecurityConfig; toolchain test). NOT compiled in the cloud (Maven Central blocked); owner verifies locally
 - TASK-002, TASK-003: repo at /home/claude/careconnect (backend, frontend, docs, ops), docs moved into docs/, git initialised on main
 - `PRD.md` first draft (SRS and OOAD format, 40 requirements, 34 use cases, diagrams, data model, traceability)
 - `ARCHITECTURE.md`, `PHASES.md`, `RULES.md`, `TASKS.md`, `DECISIONS.md`, `TEST_PLAN.md`, `SECURITY.md`, `DESIGN.md`, `PROMPTS.md`, `README.md`, `.env.example` drafted
 
 ## Current Task
-TASK-004 files written, waiting for owner's `mvn test` result from backend/ on his laptop. Next: TASK-005 Angular skeleton.
+TASK-006: Docker Compose (postgres, mailpit, backend, frontend). Owner must run `mvn clean test` once (fresh compile) and check `node -v` is 22.22.3 or later.
 
 ## Open Items
 - Final deadline and demo date (not given yet)
