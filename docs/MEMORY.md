@@ -6,6 +6,8 @@ Current state of the project. Update after every task. Permanent decisions are i
 Planning and documentation. No code written yet.
 
 ## Completed
+- Owner verified on his laptop: `mvn clean test` BUILD SUCCESS (fresh compile), frontend `npm install`, 2/2 tests and production build pass, 0 vulnerabilities
+- TASK-006, TASK-007: docker-compose.yml (postgres 16, mailpit, backend, frontend/nginx), Dockerfiles, nginx.conf with security headers and strict CSP, env-driven config, `.env.example` rewritten (backend DB settings derived from POSTGRES_* in compose). `docker compose config` validates in the cloud; images NOT built or run here (no Docker daemon). Angular production build now has no inline script/style (inlineCritical off) so CSP can stay strict
 - TASK-004 verified by owner: `mvn test` BUILD SUCCESS, 1 test passed, on Java 25.0.2 (project targets Java 21)
 - TASK-005: Angular 22.2 skeleton in frontend/ with Angular Material (M3 cyan/orange theme for now; exact teal brand theme from DESIGN.md still to do), self-hosted Inter font, app shell with training-use notice, `ng build` and `ng test` pass in the cloud (Node 24 used there)
 - TASK-004: backend skeleton (Spring Boot 4.1.1, Java 21, Maven; starters webmvc, validation, security, actuator, data-jpa, flyway; deny-by-default SecurityConfig; toolchain test). NOT compiled in the cloud (Maven Central blocked); owner verifies locally
@@ -14,7 +16,7 @@ Planning and documentation. No code written yet.
 - `ARCHITECTURE.md`, `PHASES.md`, `RULES.md`, `TASKS.md`, `DECISIONS.md`, `TEST_PLAN.md`, `SECURITY.md`, `DESIGN.md`, `PROMPTS.md`, `README.md`, `.env.example` drafted
 
 ## Current Task
-TASK-006: Docker Compose (postgres, mailpit, backend, frontend). Owner must run `mvn clean test` once (fresh compile) and check `node -v` is 22.22.3 or later.
+TASK-008: Flyway baseline migration and a real application-context test against PostgreSQL. Owner must run `docker compose up --build` once (Docker cannot run in the cloud) and report whether all four services become healthy and http://localhost:8080 shows the CareConnect page.
 
 ## Open Items
 - Final deadline and demo date (not given yet)

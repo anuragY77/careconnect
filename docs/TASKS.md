@@ -12,8 +12,8 @@ Legend: `[ ]` open, `[x]` done. Requirement ids refer to `PRD.md`.
 - [x] TASK-003 Move documents into `docs/` and add `RULES.md`, `TASKS.md`, `MEMORY.md` links in README
 - [x] TASK-004 Generate Spring Boot skeleton (Java LTS, Maven, Web, Security, Validation, JPA, PostgreSQL, Actuator, Flyway)
 - [x] TASK-005 Generate Angular skeleton with Angular Material and routing
-- [ ] TASK-006 Create Docker Compose: postgres, mailpit, backend, frontend
-- [ ] TASK-007 Add `.env.example` and load configuration from environment
+- [x] TASK-006 Create Docker Compose: postgres, mailpit, backend, frontend
+- [x] TASK-007 Add `.env.example` and load configuration from environment
 - [ ] TASK-008 Add Flyway baseline migration and verify it runs on startup
 - [ ] TASK-009 Add base error handling: RFC 7807 responses and a stable error code enum
 - [ ] TASK-010 Add ArchUnit tests for layering and module boundaries (initially trivial, extended as modules appear)
@@ -25,7 +25,7 @@ Legend: `[ ]` open, `[x]` done. Requirement ids refer to `PRD.md`.
 - [ ] TASK-013 Migration: `app_user` table; role and status enums
 - [ ] TASK-014 Password hashing and user entity; seed one admin account for local use
 - [ ] TASK-015 Login endpoint with lockout after 5 failures (TC-01, TC-02)
-- [ ] TASK-016 JWT access token and refresh token with rotation and HttpOnly cookie (TC-03)
+- [ ] TASK-016 (reject the placeholder `JWT_SECRET` from `.env.example` outside the local profile) JWT access token and refresh token with rotation and HttpOnly cookie (TC-03)
 - [ ] TASK-017 Security configuration: stateless, CORS, headers, public and protected routes
 - [ ] TASK-018 Method security and role checks; first authorization matrix test (TC-04)
 - [ ] TASK-019 Staff account management API: create, update, deactivate, reset (TC-06, TC-07)

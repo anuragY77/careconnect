@@ -38,14 +38,29 @@ Planning and documentation complete in draft. No application code yet. See `MEMO
 
 Layout: `backend/` (Spring Boot), `frontend/` (Angular), `docs/` (documents above), `ops/` (deployment helpers).
 
-## Quick Start (planned, available after Phase 0)
+## Quick Start
+
+Requirements: Docker Desktop. For development outside Docker: Java 21 or later, Maven, Node 22.22.3 or later (or 24.15+).
 
 ```
-cp .env.example .env      # fill in local values
+cp .env.example .env      # Windows PowerShell: Copy-Item .env.example .env
 docker compose up --build
 ```
 
-Then open the frontend at the address shown by the compose output. Demo accounts for each role are created by the seed profile in Phase 10.
+| What | Address |
+|---|---|
+| Application | http://localhost:8080 |
+| Development mail inbox (Mailpit) | http://localhost:8025 |
+| PostgreSQL (local tools only) | localhost:5432 |
+
+Stop with `docker compose down` (data is kept); `docker compose down -v` also deletes the database volume. Demo accounts for each role are created by the seed profile in Phase 10.
+
+Run the tests without Docker:
+
+```
+cd backend  && mvn clean test
+cd frontend && npm install && npm test -- --watch=false && npm run build
+```
 
 ## Roles
 
