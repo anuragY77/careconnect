@@ -19,25 +19,6 @@ Planning and documentation complete in draft. No application code yet. See `MEMO
 | Runtime | Docker Compose |
 | Testing | JUnit 5, Testcontainers, ArchUnit, Playwright |
 
-## Documents
-
-| File | Purpose |
-|---|---|
-| [`docs/PRD.md`](docs/PRD.md) | Product requirements, SRS and OOAD design (what and why) |
-| [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md) | How the system is built |
-| [`docs/PHASES.md`](docs/PHASES.md) | Delivery phases, MVP cut line, risks |
-| [`docs/TASKS.md`](docs/TASKS.md) | Task list to work through |
-| [`docs/RULES.md`](docs/RULES.md) | Development rules for people and the AI assistant |
-| [`docs/DECISIONS.md`](docs/DECISIONS.md) | Permanent architecture decisions |
-| [`docs/MEMORY.md`](docs/MEMORY.md) | Current project state |
-| [`docs/TEST_PLAN.md`](docs/TEST_PLAN.md) | How the system is verified |
-| [`docs/SECURITY.md`](docs/SECURITY.md) | Security requirements and checklist |
-| [`docs/DESIGN.md`](docs/DESIGN.md) | Visual and UX system |
-| [`docs/PROMPTS.md`](docs/PROMPTS.md) | Prompt templates for AI-assisted development |
-| `.env.example` | Required configuration names |
-
-Layout: `backend/` (Spring Boot), `frontend/` (Angular), `docs/` (documents above), `ops/` (deployment helpers).
-
 ## Quick Start
 
 Requirements: Docker Desktop. For development outside Docker: Java 21 or later, Maven, Node 22.22.3 or later (or 24.15+).
