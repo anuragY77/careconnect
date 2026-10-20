@@ -15,4 +15,4 @@ WORKDIR /app
 COPY --from=build /build/target/careconnect-backend-*.jar app.jar
 USER careconnect
 EXPOSE 8080
-ENTRYPOINT ["java", "-XX:MaxRAMPercentage=75", "-jar", "app.jar"]
+ENTRYPOINT ["java", "-Duser.timezone=UTC", "-XX:MaxRAMPercentage=75", "-jar", "app.jar"]

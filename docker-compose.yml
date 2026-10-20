@@ -38,7 +38,8 @@ services:
       SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/${POSTGRES_DB}
       SPRING_DATASOURCE_USERNAME: ${POSTGRES_USER}
       SPRING_DATASOURCE_PASSWORD: ${POSTGRES_PASSWORD}
-      TZ: ${APP_TIMEZONE:-Asia/Kolkata}
+      # Business timezone for display and scheduling rules; the JVM itself runs in UTC (ADR-015)
+      APP_TIMEZONE: ${APP_TIMEZONE:-Asia/Kolkata}
       FRONTEND_ORIGIN: ${FRONTEND_ORIGIN:-http://localhost:8080}
       JWT_SECRET: ${JWT_SECRET:?Set JWT_SECRET in .env}
       JWT_ACCESS_TTL_MINUTES: ${JWT_ACCESS_TTL_MINUTES:-15}
