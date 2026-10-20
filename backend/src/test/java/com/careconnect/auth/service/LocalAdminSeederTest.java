@@ -19,7 +19,7 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 
 class LocalAdminSeederTest {
 
-    private static final String PASSWORD = "Local-Admin-2026x";
+    private static final String PASSWORD = "Seed-Local-2026x";
 
     private AppUserRepository users;
     private PasswordEncoder encoder;

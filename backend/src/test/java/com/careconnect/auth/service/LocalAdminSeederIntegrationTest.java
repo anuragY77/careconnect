@@ -15,7 +15,7 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.test.context.ActiveProfiles;
 
 /** Starts the whole application with the local profile and checks the seeded admin in the real database. */
-@SpringBootTest(properties = "careconnect.seed.admin.password=Local-Admin-2026x")
+@SpringBootTest(properties = "careconnect.seed.admin.password=Seed-Local-2026x")
 @ActiveProfiles("local")
 @Import(TestcontainersConfiguration.class)
 class LocalAdminSeederIntegrationTest {
@@ -33,7 +33,7 @@ class LocalAdminSeederIntegrationTest {
         assertThat(admin.getRole()).isEqualTo(Role.ADMIN);
         assertThat(admin.isMustChangePassword()).isTrue();
         assertThat(admin.getPasswordHash()).startsWith("$2a$12$");
-        assertThat(encoder.matches("Local-Admin-2026x", admin.getPasswordHash())).isTrue();
+        assertThat(encoder.matches("Seed-Local-2026x", admin.getPasswordHash())).isTrue();
         assertThat(users.findAll().stream().filter(u -> u.getRole() == Role.ADMIN)).hasSize(1);
     }
 }
