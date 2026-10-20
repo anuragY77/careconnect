@@ -3,6 +3,7 @@ package com.careconnect.auth.repository;
 import java.util.Optional;
 
 import com.careconnect.auth.domain.AppUser;
+import com.careconnect.auth.domain.Role;
 
 import org.springframework.data.jpa.repository.JpaRepository;
 
@@ -14,4 +15,6 @@ public interface AppUserRepository extends JpaRepository<AppUser, Long> {
     boolean existsByUsernameIgnoreCase(String username);
 
     boolean existsByEmailIgnoreCase(String email);
+
+    boolean existsByRole(Role role);
 }
