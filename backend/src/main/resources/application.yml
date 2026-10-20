@@ -23,6 +23,12 @@ server:
     include-stacktrace: never
     include-binding-errors: never
 
+careconnect:
+  seed:
+    admin:
+      # Used only by the local profile, and only when no ADMIN user exists yet. No default on purpose.
+      password: ${SEED_ADMIN_PASSWORD:}
+
 management:
   endpoints:
     web:
