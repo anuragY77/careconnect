@@ -12,12 +12,9 @@ import javax.sql.DataSource;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.boot.testcontainers.service.connection.ServiceConnection;
 import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
+import org.springframework.context.annotation.Import;
 import org.springframework.test.web.servlet.MockMvc;
-import org.testcontainers.junit.jupiter.Container;
-import org.testcontainers.junit.jupiter.Testcontainers;
-import org.testcontainers.postgresql.PostgreSQLContainer;
 
 /**
  * Starts the whole application against a real, throw-away PostgreSQL 16
@@ -26,14 +23,10 @@ import org.testcontainers.postgresql.PostgreSQLContainer;
  * - Flyway applied the baseline migration,
  * - the health probe is public and everything else is denied by default.
  */
-@Testcontainers
 @SpringBootTest
 @AutoConfigureMockMvc
+@Import(TestcontainersConfiguration.class)
 class DatabaseBaselineIntegrationTest {
-
-    @Container
-    @ServiceConnection
-    static PostgreSQLContainer postgres = new PostgreSQLContainer("postgres:16");
 
     @Test
     void flywayAppliedTheBaselineMigration(@Autowired DataSource dataSource) throws Exception {
