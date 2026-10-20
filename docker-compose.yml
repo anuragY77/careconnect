@@ -65,7 +65,14 @@ services:
       backend:
         condition: service_healthy
     ports:
-      - "${FRONTEND_PORT:-8080}:80"
+      # Bound to this machine only; change the address deliberately to share on a network
+      - "127.0.0.1:${FRONTEND_PORT:-8080}:80"
+    healthcheck:
+      test: ["CMD", "wget", "-q", "--spider", "http://127.0.0.1/"]
+      interval: 10s
+      timeout: 5s
+      retries: 6
+      start_period: 5s
 
 volumes:
   pgdata:
