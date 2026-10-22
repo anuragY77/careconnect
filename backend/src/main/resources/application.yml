@@ -18,6 +18,9 @@ spring:
 
 server:
   port: 8080
+  # The backend is only reachable through nginx (compose publishes no backend port). Tomcat trusts
+  # X-Forwarded-For only from private addresses, so the client IP seen by the app is the real one.
+  forward-headers-strategy: native
   error:
     include-message: never
     include-stacktrace: never
@@ -27,6 +30,8 @@ careconnect:
   login:
     max-failed-attempts: ${LOGIN_MAX_FAILED_ATTEMPTS:5}
     lock-minutes: ${LOGIN_LOCK_MINUTES:15}
+    ip-max-failures: ${LOGIN_IP_MAX_FAILURES:20}
+    ip-window-minutes: ${LOGIN_IP_WINDOW_MINUTES:15}
   seed:
     admin:
       # Used only by the local profile, and only when no ADMIN user exists yet. No default on purpose.
