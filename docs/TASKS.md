@@ -24,7 +24,8 @@ Legend: `[ ]` open, `[x]` done. Requirement ids refer to `PRD.md`.
 
 - [ ] TASK-013 Migration: `app_user` table; role and status enums
 - [ ] TASK-014 Password hashing and user entity; seed one admin account for local use
-- [ ] TASK-015 Login endpoint with lockout after 5 failures (TC-01, TC-02)
+- [x] TASK-015 Login endpoint with lockout after 5 failures (TC-01, TC-02)
+- [x] TASK-015a Rate limiting on login and password-spraying protection: per-IP failed-login limit, HTTP 429 with Retry-After (ADR-016)
 - [ ] TASK-016 (reject the placeholder `JWT_SECRET` from `.env.example` outside the local profile) JWT access token and refresh token with rotation and HttpOnly cookie (TC-03)
 - [ ] TASK-017 Security configuration: stateless, CORS, headers, public and protected routes
 - [ ] TASK-018 Method security and role checks; first authorization matrix test (TC-04)
