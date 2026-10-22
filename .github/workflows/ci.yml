@@ -61,8 +61,14 @@ jobs:
     timeout-minutes: 25
     steps:
       - uses: actions/checkout@v7
-      - name: Create environment file from the example
-        run: cp .env.example .env
+      - name: Create throwaway environment file
+        run: |
+          cat > .env <<'EOF'
+          POSTGRES_DB=careconnect
+          POSTGRES_USER=careconnect
+          POSTGRES_PASSWORD=careconnect
+          JWT_SECRET=ci-smoke-only-not-a-real-secret-0123456789abcdef
+          EOF
       - name: Validate compose file
         run: docker compose config -q
       - name: Build and start all services, wait until healthy
