@@ -27,7 +27,8 @@ import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.ResultActions;
 
 /** The login endpoint as a client sees it: status, body, problem format, and no information leaks. */
-@SpringBootTest
+// The per-IP limit is raised so these tests (all from one address) never hit it; it has its own test class.
+@SpringBootTest(properties = "careconnect.login.ip-max-failures=1000")
 @AutoConfigureMockMvc
 @Import(TestcontainersConfiguration.class)
 class AuthControllerIntegrationTest {
