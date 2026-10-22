@@ -39,10 +39,12 @@ public class LoginThrottle {
     /** Throws {@link TooManyRequestsException} when this IP used up its failed attempts. */
     public void checkAllowed(String clientIp) {
         Instant now = clock.instant();
-        Optional<Duration> blocked = failures.blockedFor(key(clientIp), now);
+        String key = key(clientIp);
+        Optional<Duration> blocked = failures.blockedFor(key, now);
         if (blocked.isPresent()) {
             long seconds = (blocked.get().toMillis() + 999) / 1000;
-            log.warn("Login blocked for too many failed attempts from one address; retry in {}s", seconds);
+            // The address is logged for operators; it is never sent back to the client.
+            log.warn("Login blocked for too many failed attempts: address={}, retryInSeconds={}", key, seconds);
             throw new TooManyRequestsException("Too many failed login attempts. Try again later.", seconds);
         }
     }
