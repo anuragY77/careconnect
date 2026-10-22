@@ -24,6 +24,9 @@ server:
     include-binding-errors: never
 
 careconnect:
+  login:
+    max-failed-attempts: ${LOGIN_MAX_FAILED_ATTEMPTS:5}
+    lock-minutes: ${LOGIN_LOCK_MINUTES:15}
   seed:
     admin:
       # Used only by the local profile, and only when no ADMIN user exists yet. No default on purpose.
