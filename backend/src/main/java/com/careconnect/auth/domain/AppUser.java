@@ -1,5 +1,6 @@
 package com.careconnect.auth.domain;
 
+import java.time.Duration;
 import java.time.Instant;
 
 import jakarta.persistence.Column;
@@ -16,8 +17,8 @@ import jakarta.persistence.Version;
 
 /**
  * A person who can sign in: staff, or a patient with a portal account.
- * The password is stored only as a hash. Login rules (lockout, failed
- * attempts) are added to this class by the login task, not set from outside.
+ * The password is stored only as a hash. The lockout rules live here, so
+ * no other class can change the failed-attempt counter in a different way.
  */
 @Entity
 @Table(name = "app_user")
@@ -116,6 +117,48 @@ public class AppUser {
         if (value == null || value.isBlank()) {
             throw new IllegalArgumentException(name + " is required");
         }
+    }
+
+    /** True while a temporary lockout is running. The lockout ends exactly at {@code lockedUntil}. */
+    public boolean isLockedAt(Instant now) {
+        return lockedUntil != null && now.isBefore(lockedUntil);
+    }
+
+    public boolean isActive() {
+        return status == UserStatus.ACTIVE;
+    }
+
+    /**
+     * Counts a failed login. When the count reaches {@code maxAttempts} the account is locked
+     * for {@code lockDuration}. Attempts made while the account is locked change nothing, so an
+     * attacker cannot extend the lock of a real user forever. After a lock has ended the
+     * count starts again from zero.
+     */
+    public void recordFailedLogin(Instant now, int maxAttempts, Duration lockDuration) {
+        if (maxAttempts < 1) {
+            throw new IllegalArgumentException("maxAttempts must be at least 1");
+        }
+        if (lockDuration == null || lockDuration.isZero() || lockDuration.isNegative()) {
+            throw new IllegalArgumentException("lockDuration must be positive");
+        }
+        if (isLockedAt(now)) {
+            return;
+        }
+        if (lockedUntil != null) {
+            failedAttempts = 0;
+            lockedUntil = null;
+        }
+        failedAttempts++;
+        if (failedAttempts >= maxAttempts) {
+            lockedUntil = now.plus(lockDuration);
+        }
+    }
+
+    /** Clears the failed-attempt counter and any finished lock, and remembers the login time. */
+    public void recordSuccessfulLogin(Instant now) {
+        failedAttempts = 0;
+        lockedUntil = null;
+        lastLoginAt = now;
     }
 
     @PrePersist
