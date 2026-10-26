@@ -58,7 +58,7 @@ interface NavItem {
 export class StaffShell {
   protected readonly items: readonly NavItem[] = [
     { label: 'Home', path: '/home', icon: 'lucideHouse' },
-    { label: 'Patients', path: '/patients', icon: 'lucidePeople' === '' ? '' : 'lucideUsers' },
+    { label: 'Patients', path: '/patients', icon: 'lucideUsers' },
     { label: 'Appointments', path: '/appointments', icon: 'lucideCalendarDays' },
   ];
 }
