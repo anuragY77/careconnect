@@ -161,13 +161,29 @@ function startScene(canvas: HTMLCanvasElement, host: HTMLElement): () => void {
     renderer.setSize(w, h, false);
     camera.aspect = w / h;
     camera.updateProjectionMatrix();
-    // Wide panel: helix sits on the right third, clear of the headline. Narrow panel (phones):
-    // centred, smaller and dimmer so the text stays readable.
-    const wide = w >= 520;
-    const halfWidth = Math.tan((camera.fov * Math.PI) / 360) * camera.position.z * camera.aspect;
-    world.position.x = wide ? halfWidth * 0.4 : 0;
-    world.scale.setScalar(wide ? 0.78 : 0.7);
-    host.style.setProperty('--hero-opacity', wide ? '1' : '0.4');
+    // Fit the helix into the room the text leaves free, measured from the real text, so it
+    // never crosses the headline at any panel size or browser zoom.
+    const unitsPerPx = (2 * Math.tan((camera.fov * Math.PI) / 360) * camera.position.z) / h;
+    const hostLeft = host.getBoundingClientRect().left;
+    let textRight = 0;
+    host.closest('aside')?.querySelectorAll('h1, p').forEach((el) => {
+      const range = document.createRange();
+      range.selectNodeContents(el);
+      textRight = Math.max(textRight, range.getBoundingClientRect().right - hostLeft);
+    });
+    const free = w - textRight - 24;
+    const helixHalfUnits = 2.5; // radius + tilt + pointer parallax, at scale 1
+    if (free >= 170) {
+      const scale = Math.min(0.85, (free / 2) * unitsPerPx / helixHalfUnits);
+      world.position.x = (textRight + 12 + free / 2 - w / 2) * unitsPerPx;
+      world.scale.setScalar(scale);
+      host.style.setProperty('--hero-opacity', '1');
+    } else {
+      // No free column (phones): centred behind the text, smaller and dimmer.
+      world.position.x = 0;
+      world.scale.setScalar(0.7);
+      host.style.setProperty('--hero-opacity', '0.4');
+    }
     if (reduced) draw(1.1);
   };
 
