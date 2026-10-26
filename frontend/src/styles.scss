@@ -5,111 +5,210 @@
 
 @import '@spartan-ng/brain/hlm-tailwind-preset.css';
 
-html {
-  color-scheme: light;
-}
-
-:root {
-  /* Application tokens from docs/DESIGN.md */
-  --cc-primary: #0f766e;
-  --cc-surface: #ffffff;
-  --cc-text: #0f172a;
-}
-
-html,
-body {
-  height: 100%;
-  margin: 0;
-}
-
-body {
-  font-family: 'IBM Plex Sans', 'Segoe UI', Roboto, sans-serif;
-  background: var(--cc-surface);
-  color: var(--cc-text);
-}
-
+/*
+ * CareConnect design tokens (docs/DESIGN.md).
+ * Mapped onto the shadcn variable names so the Spartan Helm components pick them up.
+ * Light theme only: dark mode is out of scope.
+ */
 :root {
   color-scheme: light;
 
-  --font-sans:
-    -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, 'Noto Sans',
-    sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji', 'Segoe UI Symbol', 'Noto Color Emoji';
+  --font-sans: 'IBM Plex Sans', system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+  --ease-out: cubic-bezier(0.22, 1, 0.36, 1);
+  --font-serif: 'Newsreader', Georgia, 'Times New Roman', serif;
 
-  --chart-1: oklch(0.646 0.222 41.116);
-  --chart-2: oklch(0.6 0.118 184.704);
-  --chart-3: oklch(0.398 0.07 227.392);
-  --chart-4: oklch(0.828 0.189 84.429);
-  --chart-5: oklch(0.769 0.188 70.08);
-  --radius: 0.625rem;
-  --background: oklch(1 0 0);
-  --foreground: oklch(0.129 0.042 264.695);
-  --card: oklch(1 0 0);
-  --card-foreground: oklch(0.129 0.042 264.695);
-  --popover: oklch(1 0 0);
-  --popover-foreground: oklch(0.129 0.042 264.695);
-  --primary: oklch(0.208 0.042 265.755);
-  --primary-foreground: oklch(0.984 0.003 247.858);
-  --secondary: oklch(0.968 0.007 247.896);
-  --secondary-foreground: oklch(0.208 0.042 265.755);
-  --muted: oklch(0.968 0.007 247.896);
-  --muted-foreground: oklch(0.554 0.046 257.417);
-  --accent: oklch(0.968 0.007 247.896);
-  --accent-foreground: oklch(0.208 0.042 265.755);
-  --destructive: oklch(0.577 0.245 27.325);
-  --border: oklch(0.929 0.013 255.508);
-  --input: oklch(0.929 0.013 255.508);
-  --ring: oklch(0.704 0.04 256.788);
-  --sidebar: oklch(0.984 0.003 247.858);
-  --sidebar-foreground: oklch(0.129 0.042 264.695);
-  --sidebar-primary: oklch(0.208 0.042 265.755);
-  --sidebar-primary-foreground: oklch(0.984 0.003 247.858);
-  --sidebar-accent: oklch(0.968 0.007 247.896);
-  --sidebar-accent-foreground: oklch(0.208 0.042 265.755);
-  --sidebar-border: oklch(0.929 0.013 255.508);
-  --sidebar-ring: oklch(0.704 0.04 256.788);
-}
+  /* Brand */
+  --cc-ink: #0e2a33;
+  --cc-ink-soft: #1b3f4a;
+  --cc-teal: #0f766e;
+  --cc-teal-strong: #0b5f58;
+  --cc-mist: #f4f7f7;
+  --cc-line: #d9e2e3;
+  --cc-muted: #51666c;
 
-:root.dark {
-  color-scheme: dark;
+  /* Clinical signals: always paired with an icon and text, never colour alone */
+  --cc-signal: #b42318;
+  --cc-signal-tint: #fdecea;
+  --cc-warning: #b45309;
+  --cc-warning-tint: #fef3e2;
+  --cc-info: #1d4ed8;
+  --cc-info-tint: #e8effd;
+  --cc-success: #166534;
+  --cc-success-tint: #e7f5ec;
 
-  --chart-1: oklch(0.488 0.243 264.376);
-  --chart-2: oklch(0.696 0.17 162.48);
-  --chart-3: oklch(0.769 0.188 70.08);
-  --chart-4: oklch(0.627 0.265 303.9);
-  --chart-5: oklch(0.645 0.246 16.439);
-  --background: oklch(0.129 0.042 264.695);
-  --foreground: oklch(0.984 0.003 247.858);
-  --card: oklch(0.208 0.042 265.755);
-  --card-foreground: oklch(0.984 0.003 247.858);
-  --popover: oklch(0.208 0.042 265.755);
-  --popover-foreground: oklch(0.984 0.003 247.858);
-  --primary: oklch(0.929 0.013 255.508);
-  --primary-foreground: oklch(0.208 0.042 265.755);
-  --secondary: oklch(0.279 0.041 260.031);
-  --secondary-foreground: oklch(0.984 0.003 247.858);
-  --muted: oklch(0.279 0.041 260.031);
-  --muted-foreground: oklch(0.704 0.04 256.788);
-  --accent: oklch(0.279 0.041 260.031);
-  --accent-foreground: oklch(0.984 0.003 247.858);
-  --destructive: oklch(0.704 0.191 22.216);
-  --border: oklch(1 0 0 / 10%);
-  --input: oklch(1 0 0 / 15%);
-  --ring: oklch(0.551 0.027 264.364);
-  --sidebar: oklch(0.208 0.042 265.755);
-  --sidebar-foreground: oklch(0.984 0.003 247.858);
-  --sidebar-primary: oklch(0.984 0.003 247.858);
-  --sidebar-primary-foreground: oklch(0.208 0.042 265.755);
-  --sidebar-accent: oklch(0.279 0.041 260.031);
-  --sidebar-accent-foreground: oklch(0.984 0.003 247.858);
-  --sidebar-border: oklch(1 0 0 / 10%);
-  --sidebar-ring: oklch(0.551 0.027 264.364);
+  /* shadcn / Spartan variables */
+  --radius: 0.375rem;
+  --background: var(--cc-mist);
+  --foreground: var(--cc-ink);
+  --card: #ffffff;
+  --card-foreground: var(--cc-ink);
+  --popover: #ffffff;
+  --popover-foreground: var(--cc-ink);
+  --primary: var(--cc-teal);
+  --primary-foreground: #ffffff;
+  --secondary: #e7eeef;
+  --secondary-foreground: var(--cc-ink);
+  --muted: #e7eeef;
+  --muted-foreground: var(--cc-muted);
+  --accent: #e7eeef;
+  --accent-foreground: var(--cc-ink);
+  --destructive: var(--cc-signal);
+  --border: var(--cc-line);
+  --input: #b9c7c9;
+  --ring: var(--cc-teal);
+
+  --sidebar: var(--cc-ink);
+  --sidebar-foreground: #dbe7e9;
+  --sidebar-primary: #5eead4;
+  --sidebar-primary-foreground: var(--cc-ink);
+  --sidebar-accent: var(--cc-ink-soft);
+  --sidebar-accent-foreground: #ffffff;
+  --sidebar-border: #24474f;
+  --sidebar-ring: #5eead4;
+
+  --chart-1: var(--cc-teal);
+  --chart-2: var(--cc-info);
+  --chart-3: var(--cc-warning);
+  --chart-4: var(--cc-signal);
+  --chart-5: var(--cc-ink-soft);
 }
 
 @layer base {
   * {
     @apply border-border outline-ring/50;
   }
+
+  html,
   body {
-    @apply bg-background text-foreground;
+    height: 100%;
+  }
+
+  body {
+    @apply bg-background text-foreground font-sans antialiased;
+    margin: 0;
+    font-size: 0.9375rem;
+    line-height: 1.5;
+    text-wrap: pretty;
+  }
+
+  a,
+  button,
+  input {
+    touch-action: manipulation;
+  }
+
+  h1,
+  h2,
+  h3 {
+    text-wrap: balance;
+  }
+
+  /* One consistent, always visible keyboard focus ring */
+  :focus-visible {
+    outline: 2px solid var(--cc-teal);
+    outline-offset: 2px;
+  }
+
+  /* Dose, vitals, MRN and counts must align in columns */
+  .tnum {
+    font-variant-numeric: tabular-nums;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    *,
+    *::before,
+    *::after {
+      animation-duration: 0.01ms !important;
+      animation-iteration-count: 1 !important;
+      transition-duration: 0.01ms !important;
+      scroll-behavior: auto !important;
+    }
+  }
+}
+
+/*
+ * Motion system. Rules: animate only transform and opacity, run once in response to
+ * something the user did (a page opened, an alert arrived), never loop except the decorative
+ * ECG on the sign-in hero, and switch everything off under prefers-reduced-motion.
+ */
+@keyframes cc-rise {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+@keyframes cc-pop {
+  0% {
+    opacity: 0;
+    transform: scale(0.6);
+  }
+  70% {
+    transform: scale(1.08);
+  }
+  100% {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+@keyframes cc-bar {
+  from {
+    transform: scaleY(0);
+  }
+  to {
+    transform: scaleY(1);
+  }
+}
+
+@keyframes cc-ring {
+  0% {
+    box-shadow: 0 0 0 0 rgb(180 35 24 / 0.45);
+  }
+  100% {
+    box-shadow: 0 0 0 14px rgb(180 35 24 / 0);
+  }
+}
+
+@keyframes cc-ecg {
+  to {
+    transform: translateX(-50%);
+  }
+}
+
+@keyframes cc-fade-out {
+  to {
+    opacity: 0;
+  }
+}
+
+/* Staggered entrance: set --i (0, 1, 2 ...) on each element */
+.cc-rise {
+  animation: cc-rise 480ms var(--ease-out) both;
+  animation-delay: calc(var(--i, 0) * 70ms);
+}
+
+.cc-pop {
+  animation: cc-pop 420ms var(--ease-out) both;
+  animation-delay: calc(var(--i, 0) * 70ms + 120ms);
+}
+
+/* Page-to-page transition (Angular withViewTransitions) */
+::view-transition-old(root) {
+  animation: 140ms ease-in both cc-fade-out;
+}
+
+::view-transition-new(root) {
+  animation: 360ms var(--ease-out) both cc-rise;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  ::view-transition-old(root),
+  ::view-transition-new(root) {
+    animation: none;
   }
 }
