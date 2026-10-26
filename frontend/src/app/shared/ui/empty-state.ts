@@ -13,8 +13,8 @@ import { lucideCalendarDays, lucideFileSearch, lucideHouse, lucideUsers } from '
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     <section class="px-4 py-10 sm:px-6" aria-labelledby="empty-title">
-      <div class="border-border max-w-lg border-l-2 pl-5">
-        <ng-icon [name]="icon()" size="22" class="text-muted-foreground" aria-hidden="true" />
+      <div class="cc-rise border-border max-w-lg border-l-2 pl-5" style="--i: 2">
+        <ng-icon [name]="icon()" size="22" class="cc-pop text-muted-foreground block" style="--i: 2" aria-hidden="true" />
         <h2 id="empty-title" class="mt-3 text-base font-semibold">{{ heading() }}</h2>
         <p class="text-muted-foreground mt-1 text-sm">{{ description() }}</p>
         <div class="mt-4 flex flex-wrap gap-2"><ng-content /></div>
