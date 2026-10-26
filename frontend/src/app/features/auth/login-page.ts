@@ -3,6 +3,7 @@ import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { HlmButtonImports } from '@spartan-ng/helm/button';
 import { HlmInputImports } from '@spartan-ng/helm/input';
 import { HlmLabelImports } from '@spartan-ng/helm/label';
+import { HeroScene } from './hero-scene';
 
 /**
  * Sign-in screen. Layout is deliberately asymmetric: a serif headline on an ink panel
@@ -10,16 +11,25 @@ import { HlmLabelImports } from '@spartan-ng/helm/label';
  */
 @Component({
   selector: 'app-login-page',
-  imports: [ReactiveFormsModule, HlmButtonImports, HlmInputImports, HlmLabelImports],
+  imports: [ReactiveFormsModule, HlmButtonImports, HlmInputImports, HlmLabelImports, HeroScene],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     <div class="grid min-h-dvh lg:grid-cols-[minmax(0,5fr)_minmax(0,6fr)]">
       <aside
         class="relative isolate flex flex-col justify-between gap-12 overflow-hidden bg-[var(--cc-ink)] bg-[radial-gradient(48rem_32rem_at_0%_0%,#14505a_0%,transparent_65%)] px-6 py-8 text-white sm:px-12 lg:py-14"
       >
+        <!-- Decorative 3D helix, loaded after first paint in its own chunk. -->
+        <div class="pointer-events-none absolute inset-0 -z-20" aria-hidden="true">
+          @defer (on idle) {
+            <app-hero-scene class="block size-full" />
+          }
+          <!-- Keeps the headline readable where it meets the helix. -->
+          <div class="absolute inset-0 bg-[linear-gradient(90deg,rgb(14_42_51/0.85),transparent_72%)]"></div>
+        </div>
+
         <!-- Decorative heartbeat. Pure transform animation, hidden from assistive tech. -->
         <div
-          class="pointer-events-none absolute inset-x-0 bottom-28 -z-10 h-28 overflow-hidden text-[#5eead4] opacity-25 [mask-image:linear-gradient(to_right,transparent,black_18%,black_82%,transparent)]"
+          class="pointer-events-none absolute inset-x-0 bottom-28 -z-10 h-28 overflow-hidden text-[#5eead4] opacity-20 [mask-image:linear-gradient(to_right,transparent,black_18%,black_82%,transparent)]"
           aria-hidden="true"
         >
           <svg
@@ -61,7 +71,7 @@ import { HlmLabelImports } from '@spartan-ng/helm/label';
         </p>
       </aside>
 
-      <main class="flex items-center px-6 py-10 sm:px-12 lg:px-20">
+      <main class="relative flex items-center bg-[radial-gradient(#cfdadc_1px,transparent_1px)] [background-size:22px_22px] px-6 py-10 sm:px-12 lg:px-20">
         <form class="cc-rise w-full max-w-sm" style="--i: 2" [formGroup]="form" (ngSubmit)="submit()" novalidate>
           <h2 class="text-2xl font-semibold tracking-tight">Sign in</h2>
           <p class="text-muted-foreground mt-1 text-sm">Use the account your administrator created.</p>
