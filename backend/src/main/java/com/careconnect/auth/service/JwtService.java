@@ -4,6 +4,8 @@ import java.time.Clock;
 import java.time.Instant;
 import java.util.UUID;
 
+import com.careconnect.common.security.SecurityClaims;
+
 import org.springframework.security.oauth2.jose.jws.MacAlgorithm;
 import org.springframework.security.oauth2.jwt.JwsHeader;
 import org.springframework.security.oauth2.jwt.JwtClaimsSet;
@@ -19,7 +21,8 @@ import org.springframework.stereotype.Component;
 @Component
 public class JwtService {
 
-    public static final String ROLE_CLAIM = "role";
+    /** Same name the security configuration reads; defined once in {@link SecurityClaims}. */
+    public static final String ROLE_CLAIM = SecurityClaims.ROLE;
 
     /** A signed token and the number of seconds it stays valid. */
     public record AccessToken(String value, long expiresInSeconds) {
