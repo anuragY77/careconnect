@@ -32,6 +32,18 @@ careconnect:
     lock-minutes: ${LOGIN_LOCK_MINUTES:15}
     ip-max-failures: ${LOGIN_IP_MAX_FAILURES:20}
     ip-window-minutes: ${LOGIN_IP_WINDOW_MINUTES:15}
+  frontend:
+    # Where the web app is served from. Login, refresh and logout reject browser requests from any other origin.
+    origin: ${FRONTEND_ORIGIN:http://localhost:8080}
+  jwt:
+    # No default on purpose: the application refuses to start without a real secret (at least 32 bytes).
+    secret: ${JWT_SECRET:}
+    issuer: careconnect
+    access-ttl-minutes: ${JWT_ACCESS_TTL_MINUTES:15}
+    # A refresh token expires after this many days without use ...
+    refresh-ttl-days: ${JWT_REFRESH_TTL_DAYS:7}
+    # ... and a sign-in never lasts longer than this many days in total.
+    refresh-max-days: ${JWT_REFRESH_MAX_DAYS:30}
   seed:
     admin:
       # Used only by the local profile, and only when no ADMIN user exists yet. No default on purpose.
