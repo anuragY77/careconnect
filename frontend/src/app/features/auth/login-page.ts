@@ -27,9 +27,10 @@ import { HeroScene } from './hero-scene';
           <div class="absolute inset-0 bg-[linear-gradient(90deg,rgb(14_42_51/0.85),transparent_72%)]"></div>
         </div>
 
-        <!-- Decorative heartbeat. Pure transform animation, hidden from assistive tech. -->
+        <!-- Decorative heartbeat. Stops where the 3D helix starts (--hero-left, set by the scene).
+             Pure transform animation, hidden from assistive tech. -->
         <div
-          class="pointer-events-none absolute inset-x-0 bottom-28 -z-10 h-28 overflow-hidden text-[#5eead4] opacity-20 [mask-image:linear-gradient(to_right,transparent,black_18%,black_82%,transparent)]"
+          class="pointer-events-none absolute bottom-28 left-0 right-[calc(100%_-_var(--hero-left,100%))] -z-10 h-28 overflow-hidden text-[#5eead4] opacity-20 [mask-image:linear-gradient(to_right,transparent,black_18%,black_82%,transparent)]"
           aria-hidden="true"
         >
           <svg
