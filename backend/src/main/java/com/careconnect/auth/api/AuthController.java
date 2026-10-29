@@ -5,6 +5,7 @@ import java.time.Duration;
 import java.util.Optional;
 
 import com.careconnect.auth.service.AuthenticatedUser;
+import com.careconnect.auth.service.CurrentUserService;
 import com.careconnect.auth.service.IssuedSession;
 import com.careconnect.auth.service.LoginService;
 import com.careconnect.auth.service.LoginThrottle;
@@ -18,7 +19,10 @@ import jakarta.validation.Valid;
 
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.web.bind.annotation.CookieValue;
+import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -27,7 +31,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 /**
  * Sign in, renew and sign out. The access token is returned in the body; the refresh token only
- * in an HttpOnly cookie. All three endpoints check the request origin (see {@link OriginCheck}).
+ * in an HttpOnly cookie. Login, refresh and logout check the request origin (see {@link OriginCheck}).
  */
 @RestController
 @RequestMapping("/api/auth")
@@ -42,14 +46,16 @@ public class AuthController {
     private final LoginService loginService;
     private final LoginThrottle loginThrottle;
     private final TokenService tokenService;
+    private final CurrentUserService currentUserService;
     private final OriginCheck originCheck;
     private final Clock clock;
 
     public AuthController(LoginService loginService, LoginThrottle loginThrottle, TokenService tokenService,
-                          OriginCheck originCheck, Clock clock) {
+                          CurrentUserService currentUserService, OriginCheck originCheck, Clock clock) {
         this.loginService = loginService;
         this.loginThrottle = loginThrottle;
         this.tokenService = tokenService;
+        this.currentUserService = currentUserService;
         this.originCheck = originCheck;
         this.clock = clock;
     }
@@ -94,6 +100,15 @@ public class AuthController {
 
         tokenService.endSession(refreshToken);
         response.addHeader(HttpHeaders.SET_COOKIE, RefreshCookies.clear().toString());
+    }
+
+    /** The signed-in user, read fresh from the database. Needs a valid access token. */
+    @GetMapping("/me")
+    public SessionResponse.UserSummary me(@AuthenticationPrincipal Jwt jwt) {
+        AuthenticatedUser user = currentUserService.findActive(jwt.getSubject())
+            .orElseThrow(() -> new ApiException(ErrorCode.UNAUTHENTICATED, SESSION_ENDED));
+        return new SessionResponse.UserSummary(user.userId(), user.username(), user.fullName(), user.role(),
+            user.mustChangePassword());
     }
 
     /** Sets the refresh cookie and the no-store header, and builds the body. */
