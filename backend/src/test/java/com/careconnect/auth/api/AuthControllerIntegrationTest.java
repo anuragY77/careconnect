@@ -6,6 +6,7 @@ import static org.hamcrest.Matchers.not;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.header;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
@@ -62,12 +63,23 @@ class AuthControllerIntegrationTest {
 
         login(name, PASSWORD)
             .andExpect(status().isOk())
-            .andExpect(jsonPath("$.username").value(name))
-            .andExpect(jsonPath("$.role").value("DOCTOR"))
-            .andExpect(jsonPath("$.mustChangePassword").value(false))
-            .andExpect(jsonPath("$.userId").isNumber())
+            .andExpect(jsonPath("$.user.username").value(name))
+            .andExpect(jsonPath("$.user.role").value("DOCTOR"))
+            .andExpect(jsonPath("$.user.mustChangePassword").value(false))
+            .andExpect(jsonPath("$.user.userId").isNumber())
+            .andExpect(jsonPath("$.tokenType").value("Bearer"))
+            .andExpect(jsonPath("$.accessToken").isNotEmpty())
             .andExpect(content().string(not(containsString("password"))))
             .andExpect(content().string(not(containsString("$2a$"))));
+    }
+
+    @Test
+    void failedLoginSetsNoCookie() throws Exception {
+        String name = newUser();
+
+        login(name, "Wrong-Password-1")
+            .andExpect(status().isUnauthorized())
+            .andExpect(header().doesNotExist("Set-Cookie"));
     }
 
     @Test
@@ -90,7 +102,8 @@ class AuthControllerIntegrationTest {
             .andReturn().getResponse().getContentAsString();
 
         // Same status, code and message; only the timestamp may differ.
-        assertThat(stripTimestamp(unknownUser)).isEqualTo(stripTimestamp(wrongPassword));
+        assertThat(stripTimestamp(unknownUser))
+            .isEqualTo(stripTimestamp(wrongPassword));
     }
 
     @Test
