@@ -165,8 +165,9 @@ function startScene(canvas: HTMLCanvasElement, host: HTMLElement): () => void {
     // never crosses the headline at any panel size or browser zoom.
     const unitsPerPx = (2 * Math.tan((camera.fov * Math.PI) / 360) * camera.position.z) / h;
     const hostLeft = host.getBoundingClientRect().left;
+    const aside = host.closest('aside');
     let textRight = 0;
-    host.closest('aside')?.querySelectorAll('h1, p').forEach((el) => {
+    aside?.querySelectorAll('h1, p').forEach((el) => {
       const range = document.createRange();
       range.selectNodeContents(el);
       textRight = Math.max(textRight, range.getBoundingClientRect().right - hostLeft);
@@ -178,11 +179,14 @@ function startScene(canvas: HTMLCanvasElement, host: HTMLElement): () => void {
       world.position.x = (textRight + 12 + free / 2 - w / 2) * unitsPerPx;
       world.scale.setScalar(scale);
       host.style.setProperty('--hero-opacity', '1');
+      // Tell the page where the helix starts, so the heartbeat line can stop before it.
+      aside?.style.setProperty('--hero-left', `${textRight + 12 + free / 2 - (scale * 2.1) / unitsPerPx}px`);
     } else {
       // No free column (phones): centred behind the text, smaller and dimmer.
       world.position.x = 0;
       world.scale.setScalar(0.7);
       host.style.setProperty('--hero-opacity', '0.4');
+      aside?.style.removeProperty('--hero-left');
     }
     if (reduced) draw(1.1);
   };
@@ -245,6 +249,7 @@ function startScene(canvas: HTMLCanvasElement, host: HTMLElement): () => void {
     rungMat.dispose();
     dustMat.dispose();
     sprite.dispose();
+    host.closest('aside')?.style.removeProperty('--hero-left');
     renderer.dispose();
   };
 }
