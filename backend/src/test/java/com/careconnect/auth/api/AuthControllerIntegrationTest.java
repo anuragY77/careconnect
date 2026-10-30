@@ -90,7 +90,8 @@ class AuthControllerIntegrationTest {
             .andExpect(status().isUnauthorized())
             .andExpect(content().contentTypeCompatibleWith(MediaType.APPLICATION_PROBLEM_JSON))
             .andExpect(jsonPath("$.code").value("UNAUTHENTICATED"))
-            .andExpect(jsonPath("$.detail").value("Invalid username or password."));
+            .andExpect(jsonPath("$.detail").value("Invalid username or password."))
+            .andExpect(header().string("WWW-Authenticate", "Bearer"));
     }
 
     @Test
