@@ -40,15 +40,14 @@ public class GlobalExceptionHandler extends ResponseEntityExceptionHandler {
 
     @ExceptionHandler(TooManyRequestsException.class)
     public ResponseEntity<ProblemDetail> handleTooManyRequests(TooManyRequestsException ex) {
-        ProblemDetail problem = problem(ex.getErrorCode(), ex.getMessage());
-        return ResponseEntity.status(ex.getErrorCode().status())
+        return ResponseEntity.status(HttpStatusCode.valueOf(ErrorCode.TOO_MANY_REQUESTS.status()))
             .header(HttpHeaders.RETRY_AFTER, Long.toString(ex.getRetryAfterSeconds()))
-            .body(problem);
+            .body(problem(ErrorCode.TOO_MANY_REQUESTS, ex.getMessage()));
     }
 
     @ExceptionHandler(ApiException.class)
-    public ProblemDetail handleApiException(ApiException ex) {
-        return problem(ex.getErrorCode(), ex.getMessage());
+    public ResponseEntity<ProblemDetail> handleApiException(ApiException ex) {
+        return respond(ex.getErrorCode(), ex.getMessage());
     }
 
     @ExceptionHandler(ConstraintViolationException.class)
@@ -79,8 +78,8 @@ public class GlobalExceptionHandler extends ResponseEntityExceptionHandler {
     }
 
     @ExceptionHandler(AuthenticationException.class)
-    public ProblemDetail handleAuthentication(AuthenticationException ex) {
-        return problem(ErrorCode.UNAUTHENTICATED, "Authentication is required to access this resource.");
+    public ResponseEntity<ProblemDetail> handleAuthentication(AuthenticationException ex) {
+        return respond(ErrorCode.UNAUTHENTICATED, "Authentication is required to access this resource.");
     }
 
     @ExceptionHandler(Exception.class)
@@ -117,6 +116,19 @@ public class GlobalExceptionHandler extends ResponseEntityExceptionHandler {
             return ErrorCode.VALIDATION_FAILED;
         }
         return ErrorCode.fromStatus(status);
+    }
+
+    /**
+     * Builds the response for a coded error. Every 401 carries a {@code WWW-Authenticate} challenge,
+     * as HTTP requires, so it looks the same whether the security filter or a controller refused it.
+     * "Bearer" does not make browsers show a login dialog (only "Basic" does).
+     */
+    private static ResponseEntity<ProblemDetail> respond(ErrorCode code, String detail) {
+        ResponseEntity.BodyBuilder response = ResponseEntity.status(HttpStatusCode.valueOf(code.status()));
+        if (code == ErrorCode.UNAUTHENTICATED) {
+            response.header(HttpHeaders.WWW_AUTHENTICATE, "Bearer");
+        }
+        return response.body(problem(code, detail));
     }
 
     private static ProblemDetail problem(ErrorCode code, String detail) {
