@@ -12,6 +12,8 @@ import com.careconnect.auth.service.LoginThrottle;
 import com.careconnect.auth.service.TokenService;
 import com.careconnect.common.error.ApiException;
 import com.careconnect.common.error.ErrorCode;
+import com.careconnect.common.security.AnyAuthenticatedUser;
+import com.careconnect.common.security.PublicEndpoint;
 import com.careconnect.common.web.OriginCheck;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
@@ -31,7 +33,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 /**
  * Sign in, renew and sign out. The access token is returned in the body; the refresh token only
- * in an HttpOnly cookie. Login, refresh and logout check the request origin (see {@link OriginCheck}).
+ * in an HttpOnly cookie. All three endpoints check the request origin (see {@link OriginCheck}).
  */
 @RestController
 @RequestMapping("/api/auth")
@@ -60,6 +62,7 @@ public class AuthController {
         this.clock = clock;
     }
 
+    @PublicEndpoint
     @PostMapping("/login")
     public SessionResponse login(@Valid @RequestBody LoginRequest request, HttpServletRequest http,
                                  HttpServletResponse response) {
@@ -78,6 +81,7 @@ public class AuthController {
         return send(response, tokenService.startSession(user.get()));
     }
 
+    @PublicEndpoint
     @PostMapping("/refresh")
     public SessionResponse refresh(@CookieValue(name = RefreshCookies.NAME, required = false) String refreshToken,
                                    HttpServletRequest http, HttpServletResponse response) {
@@ -92,6 +96,7 @@ public class AuthController {
         return send(response, session.get());
     }
 
+    @PublicEndpoint
     @PostMapping("/logout")
     @ResponseStatus(HttpStatus.NO_CONTENT)
     public void logout(@CookieValue(name = RefreshCookies.NAME, required = false) String refreshToken,
@@ -103,6 +108,7 @@ public class AuthController {
     }
 
     /** The signed-in user, read fresh from the database. Needs a valid access token. */
+    @AnyAuthenticatedUser
     @GetMapping("/me")
     public SessionResponse.UserSummary me(@AuthenticationPrincipal Jwt jwt) {
         AuthenticatedUser user = currentUserService.findActive(jwt.getSubject())
