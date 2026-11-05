@@ -137,6 +137,18 @@ public class TokenService {
             .ifPresent(token -> tokens.revokeFamily(token.getFamilyId(), now));
     }
 
+    /**
+     * Ends every session of a user, on every device. Used when a user is deactivated, changes role
+     * or password, so nobody can renew an access token with an old refresh token.
+     *
+     * <p>The update clears the persistence context, so callers must finish changing entities
+     * before they call this.
+     */
+    @Transactional
+    public int revokeAllSessions(long userId) {
+        return tokens.revokeAllForUser(userId, clock.instant());
+    }
+
     /** Deletes tokens that expired more than a day ago. Returns how many were deleted. */
     @Transactional
     public int purgeExpired() {
