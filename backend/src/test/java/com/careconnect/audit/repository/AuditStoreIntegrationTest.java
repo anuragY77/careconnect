@@ -70,12 +70,13 @@ class AuditStoreIntegrationTest {
         long id = append(new AuditEvent(Instant.now(), 1L, "a", "ADMIN", AuditAction.LOGIN,
             AuditOutcome.SUCCESS, null, null, null, null, null));
 
+        // Spring wraps the PostgreSQL error, so the trigger's message is on the root cause.
         assertThatThrownBy(() -> jdbc.update("update audit_event set username = 'x' where event_id = ?", id))
-            .hasMessageContaining("append-only");
+            .rootCause().hasMessageContaining("append-only");
         assertThatThrownBy(() -> jdbc.update("delete from audit_event where event_id = ?", id))
-            .hasMessageContaining("append-only");
+            .rootCause().hasMessageContaining("append-only");
         assertThatThrownBy(() -> jdbc.execute("truncate audit_event"))
-            .hasMessageContaining("append-only");
+            .rootCause().hasMessageContaining("append-only");
         assertThat(jdbc.queryForObject("select username from audit_event where event_id = ?", String.class, id))
             .isEqualTo("a");
     }
@@ -84,6 +85,6 @@ class AuditStoreIntegrationTest {
     void theDatabaseRefusesAnUnknownOutcome() {
         assertThatThrownBy(() -> jdbc.update(
             "insert into audit_event (occurred_at, action, outcome) values (now(), 'LOGIN', 'MAYBE')"))
-            .hasMessageContaining("ck_audit_event_outcome");
+            .rootCause().hasMessageContaining("ck_audit_event_outcome");
     }
 }
