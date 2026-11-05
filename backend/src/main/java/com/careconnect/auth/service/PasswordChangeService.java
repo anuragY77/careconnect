@@ -3,6 +3,10 @@ package com.careconnect.auth.service;
 import java.time.Clock;
 import java.util.List;
 
+import com.careconnect.audit.domain.AuditAction;
+import com.careconnect.audit.domain.AuditOutcome;
+import com.careconnect.audit.service.AuditEntry;
+import com.careconnect.audit.service.AuditService;
 import com.careconnect.auth.domain.AppUser;
 import com.careconnect.auth.repository.AppUserRepository;
 
@@ -32,16 +36,18 @@ public class PasswordChangeService {
     private final PasswordPolicy passwordPolicy;
     private final LoginProperties loginProperties;
     private final TokenService tokenService;
+    private final AuditService audit;
     private final Clock clock;
 
     public PasswordChangeService(AppUserRepository users, PasswordEncoder passwordEncoder,
                                  PasswordPolicy passwordPolicy, LoginProperties loginProperties,
-                                 TokenService tokenService, Clock clock) {
+                                 TokenService tokenService, AuditService audit, Clock clock) {
         this.users = users;
         this.passwordEncoder = passwordEncoder;
         this.passwordPolicy = passwordPolicy;
         this.loginProperties = loginProperties;
         this.tokenService = tokenService;
+        this.audit = audit;
         this.clock = clock;
     }
 
@@ -53,10 +59,12 @@ public class PasswordChangeService {
         }
         var now = clock.instant();
         if (user.isLockedAt(now)) {
+            auditFailure(user, "LOCKED");
             return Result.of(Outcome.WRONG_CURRENT_PASSWORD);
         }
         if (!passwordEncoder.matches(currentPassword, user.getPasswordHash())) {
             user.recordFailedLogin(now, loginProperties.getMaxFailedAttempts(), loginProperties.lockDuration());
+            auditFailure(user, "WRONG_CURRENT_PASSWORD");
             return Result.of(Outcome.WRONG_CURRENT_PASSWORD);
         }
         List<String> problems = passwordPolicy.violations(newPassword, user.getUsername());
@@ -64,11 +72,20 @@ public class PasswordChangeService {
             problems = List.of("New password must be different from the current password");
         }
         if (!problems.isEmpty()) {
+            auditFailure(user, "NEW_PASSWORD_REJECTED");
             return new Result(Outcome.NEW_PASSWORD_REJECTED, problems, null);
         }
         user.replacePassword(passwordEncoder.encode(newPassword), false);
         AuthenticatedUser result = AuthenticatedUser.from(user);
+        audit.record(AuditEntry.of(AuditAction.PASSWORD_CHANGED, AuditOutcome.SUCCESS)
+            .by(user.getId(), user.getUsername(), user.getRole().name()).on("APP_USER", user.getId()));
         tokenService.revokeAllSessions(userId); // last: it clears the persistence context
         return new Result(Outcome.CHANGED, List.of(), result);
+    }
+
+    private void auditFailure(AppUser user, String reason) {
+        audit.record(AuditEntry.of(AuditAction.PASSWORD_CHANGED, AuditOutcome.FAILURE)
+            .by(user.getId(), user.getUsername(), user.getRole().name()).on("APP_USER", user.getId())
+            .detail("reason", reason));
     }
 }
