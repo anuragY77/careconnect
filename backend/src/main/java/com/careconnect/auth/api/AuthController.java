@@ -9,6 +9,7 @@ import com.careconnect.auth.service.CurrentUserService;
 import com.careconnect.auth.service.IssuedSession;
 import com.careconnect.auth.service.LoginService;
 import com.careconnect.auth.service.LoginThrottle;
+import com.careconnect.auth.service.PasswordChangeService;
 import com.careconnect.auth.service.TokenService;
 import com.careconnect.common.error.ApiException;
 import com.careconnect.common.error.ErrorCode;
@@ -49,15 +50,18 @@ public class AuthController {
     private final LoginThrottle loginThrottle;
     private final TokenService tokenService;
     private final CurrentUserService currentUserService;
+    private final PasswordChangeService passwordChangeService;
     private final OriginCheck originCheck;
     private final Clock clock;
 
     public AuthController(LoginService loginService, LoginThrottle loginThrottle, TokenService tokenService,
-                          CurrentUserService currentUserService, OriginCheck originCheck, Clock clock) {
+                          CurrentUserService currentUserService, PasswordChangeService passwordChangeService,
+                          OriginCheck originCheck, Clock clock) {
         this.loginService = loginService;
         this.loginThrottle = loginThrottle;
         this.tokenService = tokenService;
         this.currentUserService = currentUserService;
+        this.passwordChangeService = passwordChangeService;
         this.originCheck = originCheck;
         this.clock = clock;
     }
@@ -115,6 +119,30 @@ public class AuthController {
             .orElseThrow(() -> new ApiException(ErrorCode.UNAUTHENTICATED, SESSION_ENDED));
         return new SessionResponse.UserSummary(user.userId(), user.username(), user.fullName(), user.role(),
             user.mustChangePassword());
+    }
+
+    /**
+     * Changes the password of the signed-in user. Also the way out of a temporary password: that
+     * token has no role, so this is one of the few endpoints it can reach. All older sessions end
+     * and a new session is returned, so the user stays signed in on this device.
+     */
+    @AnyAuthenticatedUser
+    @PostMapping("/change-password")
+    public SessionResponse changePassword(@Valid @RequestBody ChangePasswordRequest request,
+                                          @AuthenticationPrincipal Jwt jwt, HttpServletRequest http,
+                                          HttpServletResponse response) {
+        originCheck.requireAllowed(http);
+
+        PasswordChangeService.Result result = passwordChangeService.change(
+            Long.parseLong(jwt.getSubject()), request.currentPassword(), request.newPassword());
+        return switch (result.outcome()) {
+            case CHANGED -> send(response, tokenService.startSession(result.user()));
+            case WRONG_CURRENT_PASSWORD -> throw new ApiException(ErrorCode.BUSINESS_RULE_VIOLATION,
+                "The current password is not correct.");
+            case NEW_PASSWORD_REJECTED -> throw new ApiException(ErrorCode.BUSINESS_RULE_VIOLATION,
+                String.join(". ", result.problems()) + ".");
+            case ACCOUNT_UNAVAILABLE -> throw new ApiException(ErrorCode.UNAUTHENTICATED, SESSION_ENDED);
+        };
     }
 
     /** Sets the refresh cookie and the no-store header, and builds the body. */
