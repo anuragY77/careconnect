@@ -5,6 +5,10 @@ import java.time.Instant;
 import java.util.List;
 import java.util.Optional;
 
+import com.careconnect.audit.domain.AuditAction;
+import com.careconnect.audit.domain.AuditOutcome;
+import com.careconnect.audit.service.AuditEntry;
+import com.careconnect.audit.service.AuditService;
 import com.careconnect.auth.domain.AppUser;
 import com.careconnect.auth.domain.Role;
 import com.careconnect.auth.domain.UserStatus;
@@ -32,14 +36,17 @@ public class StaffAccountService {
     private final PasswordEncoder passwordEncoder;
     private final TemporaryPasswords temporaryPasswords;
     private final TokenService tokenService;
+    private final AuditService audit;
     private final Clock clock;
 
     public StaffAccountService(AppUserRepository users, PasswordEncoder passwordEncoder,
-                               TemporaryPasswords temporaryPasswords, TokenService tokenService, Clock clock) {
+                               TemporaryPasswords temporaryPasswords, TokenService tokenService,
+                               AuditService audit, Clock clock) {
         this.users = users;
         this.passwordEncoder = passwordEncoder;
         this.temporaryPasswords = temporaryPasswords;
         this.tokenService = tokenService;
+        this.audit = audit;
         this.clock = clock;
     }
 
@@ -56,6 +63,7 @@ public class StaffAccountService {
         String temporary = temporaryPasswords.generate();
         AppUser saved = users.save(AppUser.create(cleanName, passwordEncoder.encode(temporary),
             fullName, email, role, null, true));
+        record(AuditAction.STAFF_CREATED, saved, "role", role, "username", saved.getUsername());
         return new StaffCredential(view(saved), temporary);
     }
 
@@ -87,10 +95,12 @@ public class StaffAccountService {
         if (users.existsByEmailIgnoreCaseAndIdNot(email.trim(), userId)) {
             throw new ApiException(ErrorCode.CONFLICT, "This e-mail address is already in use.");
         }
+        Role roleBefore = user.getRole();
         user.updateProfile(fullName, email);
         if (roleChanges) {
             user.changeStaffRole(role);
         }
+        record(AuditAction.STAFF_UPDATED, user, "roleBefore", roleBefore, "roleAfter", user.getRole());
         StaffAccountView result = view(user);
         if (roleChanges) {
             tokenService.revokeAllSessions(userId); // last: it clears the persistence context
@@ -109,6 +119,7 @@ public class StaffAccountService {
                 requireAnotherActiveAdmin(userId);
             }
             user.deactivate();
+            record(AuditAction.STAFF_DEACTIVATED, user);
         }
         StaffAccountView result = view(user);
         tokenService.revokeAllSessions(userId);
@@ -119,6 +130,7 @@ public class StaffAccountService {
     public StaffAccountView activate(long userId) {
         AppUser user = loadStaff(userId);
         user.activate();
+        record(AuditAction.STAFF_ACTIVATED, user);
         return view(user);
     }
 
@@ -127,6 +139,7 @@ public class StaffAccountService {
     public StaffAccountView unlock(long userId) {
         AppUser user = loadStaff(userId);
         user.clearLock();
+        record(AuditAction.STAFF_UNLOCKED, user);
         return view(user);
     }
 
@@ -136,9 +149,19 @@ public class StaffAccountService {
         AppUser user = loadStaff(userId);
         String temporary = temporaryPasswords.generate();
         user.replacePassword(passwordEncoder.encode(temporary), true);
+        record(AuditAction.STAFF_PASSWORD_RESET, user);
         StaffAccountView result = view(user);
         tokenService.revokeAllSessions(userId);
         return new StaffCredential(result, temporary);
+    }
+
+    /** Records an action on a staff account; the acting administrator comes from the access token. */
+    private void record(AuditAction action, AppUser target, Object... detailPairs) {
+        AuditEntry entry = AuditEntry.of(action, AuditOutcome.SUCCESS).on("STAFF_ACCOUNT", target.getId());
+        for (int i = 0; i < detailPairs.length; i += 2) {
+            entry.detail((String) detailPairs[i], detailPairs[i + 1]);
+        }
+        audit.record(entry);
     }
 
     private StaffAccountView view(AppUser user) {
