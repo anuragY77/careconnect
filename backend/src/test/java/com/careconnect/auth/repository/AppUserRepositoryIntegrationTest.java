@@ -79,10 +79,11 @@ class AppUserRepositoryIntegrationTest {
 
     @Test
     void onePatientCanHaveOnlyOnePortalAccount() {
-        users.saveAndFlush(AppUser.create("pat.one", "hash", "Pat One", "p1@example.org", Role.PATIENT, 42L, false));
+        long patientId = newPatient();
+        users.saveAndFlush(AppUser.create("pat.one", "hash", "Pat One", "p1@example.org", Role.PATIENT, patientId, false));
 
         assertThatThrownBy(() -> users.saveAndFlush(
-                AppUser.create("pat.two", "hash", "Pat Two", "p2@example.org", Role.PATIENT, 42L, false)))
+                AppUser.create("pat.two", "hash", "Pat Two", "p2@example.org", Role.PATIENT, patientId, false)))
             .hasStackTraceContaining("uq_app_user_linked_patient");
     }
 
@@ -102,6 +103,14 @@ class AppUserRepositoryIntegrationTest {
     void databaseRejectsAnUnknownRole() {
         assertThatThrownBy(() -> insertRaw("hacker", "HACKER", "NULL"))
             .hasStackTraceContaining("ck_app_user_role");
+    }
+
+    /** A portal account must point at a real patient (foreign key since V5). */
+    private long newPatient() {
+        return ((Number) entityManager.createNativeQuery(
+            "insert into patient (mrn, first_name, last_name, dob, sex) "
+                + "values ('T' || nextval('patient_mrn_seq'), 'Pat', 'Test', date '1990-01-01', 'OTHER') "
+                + "returning patient_id").getSingleResult()).longValue();
     }
 
     /** Bypasses the entity on purpose, to prove the database enforces the rules by itself. */
