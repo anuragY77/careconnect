@@ -5,6 +5,10 @@ import java.time.Clock;
 import java.time.Instant;
 import java.util.Optional;
 
+import com.careconnect.audit.domain.AuditAction;
+import com.careconnect.audit.domain.AuditOutcome;
+import com.careconnect.audit.service.AuditEntry;
+import com.careconnect.audit.service.AuditService;
 import com.careconnect.auth.domain.AppUser;
 import com.careconnect.auth.repository.AppUserRepository;
 
@@ -31,15 +35,17 @@ public class LoginService {
     private final AppUserRepository users;
     private final PasswordEncoder passwordEncoder;
     private final LoginProperties properties;
+    private final AuditService audit;
     private final Clock clock;
     /** A real hash that matches no password anyone can type; used to spend equal time for unknown users. */
     private final String unknownUserHash;
 
     public LoginService(AppUserRepository users, PasswordEncoder passwordEncoder,
-                        LoginProperties properties, Clock clock) {
+                        LoginProperties properties, AuditService audit, Clock clock) {
         this.users = users;
         this.passwordEncoder = passwordEncoder;
         this.properties = properties;
+        this.audit = audit;
         this.clock = clock;
         this.unknownUserHash = passwordEncoder.encode("not-a-real-password-" + System.nanoTime());
     }
@@ -51,6 +57,7 @@ public class LoginService {
 
         if (found.isEmpty()) {
             passwordMatches(password, unknownUserHash);
+            auditFailure(username == null ? null : username.trim(), null, null, "UNKNOWN_USER");
             return Optional.empty();
         }
 
@@ -58,9 +65,11 @@ public class LoginService {
         boolean matches = passwordMatches(password, user.getPasswordHash());
 
         if (user.isLockedAt(now)) {
+            auditFailure(user.getUsername(), user.getId(), user.getRole().name(), "LOCKED");
             return Optional.empty();
         }
         if (!user.isActive()) {
+            auditFailure(user.getUsername(), user.getId(), user.getRole().name(), "INACTIVE");
             return Optional.empty();
         }
         if (!matches) {
@@ -69,12 +78,21 @@ public class LoginService {
             if (user.isLockedAt(now)) {
                 log.warn("Account locked after repeated failed logins: userId={}", user.getId());
             }
+            auditFailure(user.getUsername(), user.getId(), user.getRole().name(), "BAD_PASSWORD");
             return Optional.empty();
         }
 
         user.recordSuccessfulLogin(now);
+        audit.record(AuditEntry.of(AuditAction.LOGIN, AuditOutcome.SUCCESS)
+            .by(user.getId(), user.getUsername(), user.getRole().name()));
         return Optional.of(new AuthenticatedUser(user.getId(), user.getUsername(), user.getFullName(),
             user.getRole(), user.isMustChangePassword()));
+    }
+
+    /** The reason is for administrators only; the client always gets the same 401. */
+    private void auditFailure(String username, Long userId, String role, String reason) {
+        audit.record(AuditEntry.of(AuditAction.LOGIN, AuditOutcome.FAILURE)
+            .by(userId, username, role).detail("reason", reason));
     }
 
     /** Passwords over 72 bytes can never match a BCrypt hash made by this system; no need to ask BCrypt. */
