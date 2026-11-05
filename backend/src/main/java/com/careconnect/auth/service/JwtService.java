@@ -52,10 +52,18 @@ public class JwtService {
             .issuedAt(now)
             .expiresAt(now.plus(properties.accessTtl()))
             .id(UUID.randomUUID().toString())
-            .claim(ROLE_CLAIM, user.role().name())
+            .claim(ROLE_CLAIM, roleClaimFor(user))
             .build();
         JwsHeader header = JwsHeader.with(MacAlgorithm.HS256).build();
         String value = encoder.encode(JwtEncoderParameters.from(header, claims)).getTokenValue();
         return new AccessToken(value, properties.accessTtl().toSeconds());
+    }
+
+    /**
+     * A user with a temporary password gets a token without a real role, so the server (not only
+     * the web app) refuses every role-protected endpoint until the password is changed.
+     */
+    private static String roleClaimFor(AuthenticatedUser user) {
+        return user.mustChangePassword() ? SecurityClaims.PASSWORD_CHANGE_REQUIRED : user.role().name();
     }
 }
