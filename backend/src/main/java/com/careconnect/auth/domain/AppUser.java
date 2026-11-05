@@ -161,6 +161,52 @@ public class AppUser {
         lastLoginAt = now;
     }
 
+    /** Changes the name and e-mail. */
+    public void updateProfile(String newFullName, String newEmail) {
+        requireText(newFullName, "fullName");
+        requireText(newEmail, "email");
+        this.fullName = newFullName.trim();
+        this.email = newEmail.trim();
+    }
+
+    /** Moves a staff user to another staff role. A patient account never changes role. */
+    public void changeStaffRole(Role newRole) {
+        if (newRole == null || !newRole.isStaff()) {
+            throw new IllegalArgumentException("A staff user can only get a staff role");
+        }
+        if (!role.isStaff()) {
+            throw new IllegalArgumentException("Only a staff user can change role");
+        }
+        this.role = newRole;
+    }
+
+    public void deactivate() {
+        this.status = UserStatus.INACTIVE;
+    }
+
+    /** Makes the account usable again, with a clean lockout state. */
+    public void activate() {
+        this.status = UserStatus.ACTIVE;
+        clearLock();
+    }
+
+    /** Ends a lockout early and resets the failed-attempt counter. */
+    public void clearLock() {
+        this.failedAttempts = 0;
+        this.lockedUntil = null;
+    }
+
+    /**
+     * Stores a new password hash. {@code mustChange} is true for a temporary password that the
+     * user has to replace. Also clears the lockout, because the new password is a fresh start.
+     */
+    public void replacePassword(String newPasswordHash, boolean mustChange) {
+        requireText(newPasswordHash, "passwordHash");
+        this.passwordHash = newPasswordHash;
+        this.mustChangePassword = mustChange;
+        clearLock();
+    }
+
     @PrePersist
     void onCreate() {
         Instant now = Instant.now();
