@@ -94,8 +94,11 @@ class StaffAccountServiceIntegrationTest {
 
     @Test
     void aPatientAccountIsNotManagedHere() {
+        long patientId = jdbc.queryForObject("insert into patient (mrn, first_name, last_name, dob, sex) "
+            + "values ('T' || nextval('patient_mrn_seq'), 'Pat', 'Test', date '1990-01-01', 'OTHER') "
+            + "returning patient_id", Long.class);
         AppUser patient = users.save(AppUser.create(unique(), "hash", "Pat", unique() + "@example.org",
-            Role.PATIENT, 99L, false));
+            Role.PATIENT, patientId, false));
 
         assertThatThrownBy(() -> service.get(patient.getId()))
             .isInstanceOfSatisfying(ApiException.class, e -> assertThat(e.getErrorCode()).isEqualTo(ErrorCode.RESOURCE_NOT_FOUND));
