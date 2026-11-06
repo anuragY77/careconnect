@@ -61,7 +61,10 @@ class PatientRegistrySchemaIntegrationTest {
     @Test
     void patientRulesAreEnforcedByTheDatabase() {
         assertThatThrownBy(() -> jdbc.update("insert into patient (mrn, first_name, last_name, dob, sex) "
-            + "values ('X1', 'A', 'B', current_date + 1, 'MALE')")).rootCause().hasMessageContaining("ck_patient_dob");
+            + "values ('X1', 'A', 'B', current_date + 2, 'MALE')")).rootCause().hasMessageContaining("ck_patient_dob");
+        // One day ahead is allowed: UTC is behind India (V6).
+        assertThat(jdbc.update("insert into patient (mrn, first_name, last_name, dob, sex) "
+            + "values ('X1B', 'A', 'B', current_date + 1, 'MALE')")).isEqualTo(1);
         assertThatThrownBy(() -> jdbc.update("insert into patient (mrn, first_name, last_name, dob, sex) "
             + "values ('X2', 'A', 'B', date '2000-01-01', 'ROBOT')")).rootCause().hasMessageContaining("ck_patient_sex");
         assertThatThrownBy(() -> jdbc.update("insert into patient (mrn, first_name, last_name, dob, sex) "
