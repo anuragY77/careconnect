@@ -26,7 +26,7 @@ import org.springframework.http.MediaType;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.test.web.servlet.MockMvc;
 
-/** Patient registration through the full security chain (TC-10). */
+/** Patient registration through the full security chain (TC-10, TC-11). */
 // Same settings as the other API tests, so all share one application context.
 @SpringBootTest(properties = "careconnect.login.ip-max-failures=1000")
 @AutoConfigureMockMvc
@@ -34,11 +34,11 @@ import org.springframework.test.web.servlet.MockMvc;
 class PatientApiIntegrationTest {
 
     private static final String PASSWORD = "Correct-Horse-42";
-    private static final String VALID = "{\"firstName\":\"Asha\",\"lastName\":\"Rao\",\"dateOfBirth\":\"1990-05-17\","
-        + "\"sex\":\"FEMALE\",\"phone\":\"98765 43210\",\"email\":\"asha@example.org\"}";
 
-    private static String confirmed(String body) {
-        return body.replace("}", ",\"confirmNotDuplicate\":true}");
+    /** A new person every time, so tests do not trigger each other's possible-duplicate warning. */
+    private static String valid() {
+        return "{\"firstName\":\"Asha\",\"lastName\":\"R" + UUID.randomUUID().toString().replace("-", "").substring(0, 12)
+            + "\",\"dateOfBirth\":\"1990-05-17\",\"sex\":\"FEMALE\",\"email\":\"asha@example.org\"}";
     }
 
     @Autowired
@@ -67,7 +67,7 @@ class PatientApiIntegrationTest {
     @Test
     void frontDeskDoctorsAndNursesCanRegisterAPatient() throws Exception {
         for (Role role : new Role[] {Role.RECEPTIONIST, Role.DOCTOR, Role.NURSE}) {
-            register(tokenFor(role), confirmed(VALID))
+            register(tokenFor(role), valid())
                 .andExpect(status().isCreated())
                 .andExpect(header().string("Location", matchesPattern("/api/patients/\\d+")))
                 .andExpect(header().string("Cache-Control", containsString("no-store")))
@@ -79,7 +79,7 @@ class PatientApiIntegrationTest {
 
     @Test
     void theMrnCanNotBeChosenByTheCaller() throws Exception {
-        String body = confirmed(VALID.replace("{", "{\"mrn\":\"HACK-1\",\"patientId\":1,\"status\":\"INACTIVE\","));
+        String body = valid().replace("{", "{\"mrn\":\"HACK-1\",\"patientId\":1,\"status\":\"INACTIVE\",");
 
         var result = register(tokenFor(Role.RECEPTIONIST), body).andReturn().getResponse();
 
@@ -94,9 +94,9 @@ class PatientApiIntegrationTest {
     @Test
     void otherRolesAndAnonymousCallersAreRefused() throws Exception {
         for (Role role : new Role[] {Role.PHARMACIST, Role.LAB_TECHNICIAN, Role.ADMIN}) {
-            register(tokenFor(role), VALID).andExpect(status().isForbidden());
+            register(tokenFor(role), valid()).andExpect(status().isForbidden());
         }
-        register(null, VALID).andExpect(status().isUnauthorized());
+        register(null, valid()).andExpect(status().isUnauthorized());
     }
 
     @Test
@@ -113,34 +113,32 @@ class PatientApiIntegrationTest {
     }
 
     @Test
-    void possibleDuplicatesRequireExplicitConfirmation() throws Exception {
-        String token = tokenFor(Role.RECEPTIONIST);
-        String name = "Duplicate-" + UUID.randomUUID().toString().substring(0, 8);
-        String phone = "98765" + UUID.randomUUID().toString().replaceAll("\\D", "").substring(0, 7);
-        String body = VALID.replace("Asha", name).replace("Rao", "Example").replace("98765 43210", phone);
-
-        register(token, body).andExpect(status().isCreated());
-
-        register(token, body)
-            .andExpect(status().isConflict())
-            .andExpect(jsonPath("$.code").value("POSSIBLE_DUPLICATE"))
-            .andExpect(jsonPath("$.possibleDuplicates[0].firstName").value(name))
-            .andExpect(jsonPath("$.possibleDuplicates[0].mrn").value(matchesPattern("CC-\\d{6,}")));
-
-        register(token, confirmed(body))
-            .andExpect(status().isCreated())
-            .andExpect(jsonPath("$.firstName").value(name));
-    }
-
-    @Test
     void aFutureDateOfBirthAndAMissingSexAreRefused() throws Exception {
         String token = tokenFor(Role.RECEPTIONIST);
 
-        register(token, VALID.replace("1990-05-17", "2999-01-01"))
+        register(token, valid().replace("1990-05-17", "2999-01-01"))
             .andExpect(status().isBadRequest()).andExpect(jsonPath("$.code").value("VALIDATION_FAILED"));
-        register(token, VALID.replace("\"sex\":\"FEMALE\",", ""))
+        register(token, valid().replace("\"sex\":\"FEMALE\",", ""))
             .andExpect(status().isBadRequest()).andExpect(jsonPath("$.code").value("VALIDATION_FAILED"));
-        register(token, VALID.replace("FEMALE", "ROBOT"))
+        register(token, valid().replace("FEMALE", "ROBOT"))
             .andExpect(status().isBadRequest());
+    }
+
+    @Test
+    void aPossibleDuplicateIsWarnedAboutUntilTheFrontDeskConfirms() throws Exception {
+        String token = tokenFor(Role.RECEPTIONIST);
+        String person = valid();
+        String first = register(token, person).andExpect(status().isCreated()).andReturn().getResponse().getContentAsString();
+        String mrn = JsonPath.read(first, "$.mrn");
+
+        register(token, person)
+            .andExpect(status().isConflict())
+            .andExpect(jsonPath("$.code").value("POSSIBLE_DUPLICATE"))
+            .andExpect(jsonPath("$.possibleDuplicates[0].mrn").value(mrn))
+            .andExpect(jsonPath("$.possibleDuplicates[0].dateOfBirth").value("1990-05-17"));
+
+        register(token, person.replace("{", "{\"confirmNotDuplicate\":true,"))
+            .andExpect(status().isCreated())
+            .andExpect(jsonPath("$.mrn").value(org.hamcrest.Matchers.not(mrn)));
     }
 }
