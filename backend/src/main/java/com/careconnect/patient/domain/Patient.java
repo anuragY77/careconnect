@@ -114,6 +114,32 @@ public class Patient {
         return p;
     }
 
+    /** Replaces the demographics. The MRN, the status and the creation time never change here. */
+    public void updateDemographics(String firstName, String lastName, LocalDate dateOfBirth, Sex sex, String phone,
+                                   String email, String address, String emergencyContactName,
+                                   String emergencyContactPhone, String insuranceProvider,
+                                   String insurancePolicyNumber) {
+        requireText(firstName, "firstName");
+        requireText(lastName, "lastName");
+        if (dateOfBirth == null) {
+            throw new IllegalArgumentException("dateOfBirth is required");
+        }
+        if (sex == null) {
+            throw new IllegalArgumentException("sex is required");
+        }
+        this.firstName = firstName;
+        this.lastName = lastName;
+        this.dateOfBirth = dateOfBirth;
+        this.sex = sex;
+        this.phone = phone;
+        this.email = email;
+        this.address = address;
+        this.emergencyContactName = emergencyContactName;
+        this.emergencyContactPhone = emergencyContactPhone;
+        this.insuranceProvider = insuranceProvider;
+        this.insurancePolicyNumber = insurancePolicyNumber;
+    }
+
     private static void requireText(String value, String name) {
         if (value == null || value.isBlank()) {
             throw new IllegalArgumentException(name + " is required");
