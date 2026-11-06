@@ -37,6 +37,10 @@ class PatientApiIntegrationTest {
     private static final String VALID = "{\"firstName\":\"Asha\",\"lastName\":\"Rao\",\"dateOfBirth\":\"1990-05-17\","
         + "\"sex\":\"FEMALE\",\"phone\":\"98765 43210\",\"email\":\"asha@example.org\"}";
 
+    private static String confirmed(String body) {
+        return body.replace("}", ",\"confirmedNotDuplicate\":true}");
+    }
+
     @Autowired
     private MockMvc mvc;
 
@@ -63,7 +67,7 @@ class PatientApiIntegrationTest {
     @Test
     void frontDeskDoctorsAndNursesCanRegisterAPatient() throws Exception {
         for (Role role : new Role[] {Role.RECEPTIONIST, Role.DOCTOR, Role.NURSE}) {
-            register(tokenFor(role), VALID)
+            register(tokenFor(role), confirmed(VALID))
                 .andExpect(status().isCreated())
                 .andExpect(header().string("Location", matchesPattern("/api/patients/\\d+")))
                 .andExpect(header().string("Cache-Control", containsString("no-store")))
@@ -75,7 +79,7 @@ class PatientApiIntegrationTest {
 
     @Test
     void theMrnCanNotBeChosenByTheCaller() throws Exception {
-        String body = VALID.replace("{", "{\"mrn\":\"HACK-1\",\"patientId\":1,\"status\":\"INACTIVE\",");
+        String body = confirmed(VALID.replace("{", "{\"mrn\":\"HACK-1\",\"patientId\":1,\"status\":\"INACTIVE\","));
 
         var result = register(tokenFor(Role.RECEPTIONIST), body).andReturn().getResponse();
 
@@ -106,6 +110,26 @@ class PatientApiIntegrationTest {
             .andExpect(jsonPath("$.errors[*].field").value(hasItem("firstName")))
             .andExpect(jsonPath("$.errors[*].field").value(hasItem("phone")))
             .andExpect(jsonPath("$.errors[*].field").value(hasItem("email")));
+    }
+
+    @Test
+    void possibleDuplicatesRequireExplicitConfirmation() throws Exception {
+        String token = tokenFor(Role.RECEPTIONIST);
+        String name = "Duplicate-" + UUID.randomUUID().toString().substring(0, 8);
+        String phone = "98765" + UUID.randomUUID().toString().replaceAll("\\D", "").substring(0, 7);
+        String body = VALID.replace("Asha", name).replace("Rao", "Example").replace("98765 43210", phone);
+
+        register(token, body).andExpect(status().isCreated());
+
+        register(token, body)
+            .andExpect(status().isConflict())
+            .andExpect(jsonPath("$.code").value("POSSIBLE_DUPLICATE"))
+            .andExpect(jsonPath("$.possibleDuplicates[0].firstName").value(name))
+            .andExpect(jsonPath("$.possibleDuplicates[0].mrn").value(matchesPattern("CC-\\d{6,}")));
+
+        register(token, confirmed(body))
+            .andExpect(status().isCreated())
+            .andExpect(jsonPath("$.firstName").value(name));
     }
 
     @Test

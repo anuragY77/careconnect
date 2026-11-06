@@ -30,7 +30,8 @@ public class PatientController {
     @PostMapping
     @RegistrationStaff
     public ResponseEntity<PatientResponse> register(@Valid @RequestBody RegisterPatientRequest request) {
-        PatientResponse created = PatientResponse.from(service.register(request.toCommand()));
+        PatientResponse created = PatientResponse.from(
+            service.register(request.toCommand(), Boolean.TRUE.equals(request.confirmedNotDuplicate())));
         return ResponseEntity.created(URI.create("/api/patients/" + created.patientId()))
             .header(HttpHeaders.CACHE_CONTROL, "no-store")
             .body(created);

@@ -43,7 +43,7 @@ class PatientServiceIntegrationTest {
         NewPatient input = new NewPatient("  Asha ", "Rao   Singh", LocalDate.of(1990, 5, 17), Sex.FEMALE,
             " 98765 43210 ", "ASHA@Example.ORG", "  ", "  Ravi Rao ", "", " Star Health ", " P-123 ");
 
-        PatientView view = service.register(input);
+        PatientView view = service.register(input, false);
 
         assertThat(view.mrn()).matches("CC-\\d{6,}");
         assertThat(view.firstName()).isEqualTo("Asha");
@@ -62,8 +62,14 @@ class PatientServiceIntegrationTest {
 
     @Test
     void everyPatientGetsADifferentMrn() {
-        PatientView a = service.register(patient("A", "One", LocalDate.of(2000, 1, 1)));
-        PatientView b = service.register(patient("A", "One", LocalDate.of(2000, 1, 1)));
+        NewPatient input = patient("A", "One", LocalDate.of(2000, 1, 1));
+        PatientView a = service.register(input, false);
+
+        assertThatThrownBy(() -> service.register(input, false))
+            .isInstanceOfSatisfying(ApiException.class,
+                e -> assertThat(e.getErrorCode()).isEqualTo(ErrorCode.POSSIBLE_DUPLICATE));
+
+        PatientView b = service.register(input, true);
 
         assertThat(a.mrn()).isNotEqualTo(b.mrn());
         assertThat(Long.parseLong(b.mrn().substring(3))).isGreaterThan(Long.parseLong(a.mrn().substring(3)));
@@ -74,28 +80,28 @@ class PatientServiceIntegrationTest {
         LocalDate todayUtc = LocalDate.now(ZoneOffset.UTC);
         long before = patientCount();
 
-        assertThatThrownBy(() -> service.register(patient("A", "B", todayUtc.plusDays(2))))
+        assertThatThrownBy(() -> service.register(patient("A", "B", todayUtc.plusDays(2)), false))
             .isInstanceOfSatisfying(ApiException.class, e -> assertThat(e.getErrorCode()).isEqualTo(ErrorCode.VALIDATION_FAILED));
-        assertThatThrownBy(() -> service.register(patient("A", "B", LocalDate.of(1899, 12, 31))))
+        assertThatThrownBy(() -> service.register(patient("A", "B", LocalDate.of(1899, 12, 31)), false))
             .isInstanceOfSatisfying(ApiException.class, e -> assertThat(e.getErrorCode()).isEqualTo(ErrorCode.VALIDATION_FAILED));
         assertThat(patientCount()).isEqualTo(before);
 
         // Born just after midnight in India: still tomorrow in UTC (V6).
-        assertThat(service.register(patient("New", "Born", todayUtc.plusDays(1))).patientId()).isPositive();
-        assertThat(service.register(patient("Same", "Day", todayUtc)).patientId()).isPositive();
+        assertThat(service.register(patient("New", "Born", todayUtc.plusDays(1)), false).patientId()).isPositive();
+        assertThat(service.register(patient("Same", "Day", todayUtc), false).patientId()).isPositive();
     }
 
     @Test
     void namesAreRequired() {
-        assertThatThrownBy(() -> service.register(patient("   ", "B", LocalDate.of(2000, 1, 1))))
+        assertThatThrownBy(() -> service.register(patient("   ", "B", LocalDate.of(2000, 1, 1)), false))
             .isInstanceOfSatisfying(ApiException.class, e -> assertThat(e.getErrorCode()).isEqualTo(ErrorCode.VALIDATION_FAILED));
-        assertThatThrownBy(() -> service.register(patient("A", null, LocalDate.of(2000, 1, 1))))
+        assertThatThrownBy(() -> service.register(patient("A", null, LocalDate.of(2000, 1, 1)), false))
             .isInstanceOfSatisfying(ApiException.class, e -> assertThat(e.getErrorCode()).isEqualTo(ErrorCode.VALIDATION_FAILED));
     }
 
     @Test
     void registrationIsAudited() {
-        PatientView view = service.register(patient("Audit", "Me", LocalDate.of(1985, 3, 3)));
+        PatientView view = service.register(patient("Audit", "Me", LocalDate.of(1985, 3, 3)), false);
 
         Map<String, Object> event = jdbc.queryForMap("select action, outcome, patient_id, resource_type, resource_id, "
             + "details ->> 'mrn' as mrn, details::text as details from audit_event "

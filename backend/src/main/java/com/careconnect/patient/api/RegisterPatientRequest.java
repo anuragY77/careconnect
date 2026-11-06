@@ -25,7 +25,8 @@ public record RegisterPatientRequest(
     @Size(max = 20) @Pattern(regexp = "|[0-9+()\\- ]{7,20}", message = "must be a phone number of 7 to 20 digits, spaces, + ( ) or -")
     String emergencyContactPhone,
     @Size(max = 120) String insuranceProvider,
-    @Size(max = 60) String insurancePolicyNumber) {
+    @Size(max = 60) String insurancePolicyNumber,
+    Boolean confirmedNotDuplicate) {
 
     NewPatient toCommand() {
         return new NewPatient(firstName, lastName, dateOfBirth, sex, phone, email, address, emergencyContactName,
