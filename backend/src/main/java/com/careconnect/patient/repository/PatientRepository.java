@@ -6,11 +6,12 @@ import java.util.List;
 import com.careconnect.patient.domain.Patient;
 
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
 /** Persistence for patients. Only the patient module's services use it (ArchUnit enforces this). */
-public interface PatientRepository extends JpaRepository<Patient, Long> {
+public interface PatientRepository extends JpaRepository<Patient, Long>, JpaSpecificationExecutor<Patient> {
 
     /** Next number of the MRN sequence. Numbers are never reused, so a rolled-back registration leaves a gap. */
     @Query(value = "select nextval('patient_mrn_seq')", nativeQuery = true)
