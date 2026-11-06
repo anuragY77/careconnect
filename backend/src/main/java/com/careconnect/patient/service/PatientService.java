@@ -52,7 +52,7 @@ public class PatientService {
      * nothing is saved and a POSSIBLE_DUPLICATE error lists them.
      */
     @Transactional
-    public PatientView register(NewPatient input, boolean confirmedNotDuplicate) {
+    public PatientView register(NewPatient input, Boolean confirmedNotDuplicate) {
         String firstName = name(input.firstName(), "First name");
         String lastName = name(input.lastName(), "Last name");
         requireValidDateOfBirth(input.dateOfBirth());
@@ -61,7 +61,7 @@ public class PatientService {
         }
         String phone = optional(input.phone());
         List<Patient> similar = findSimilar(firstName, lastName, input.dateOfBirth(), phone);
-        if (!similar.isEmpty() && !confirmedNotDuplicate) {
+        if (!similar.isEmpty() && !Boolean.TRUE.equals(confirmedNotDuplicate)) {
             throw new ApiException(ErrorCode.POSSIBLE_DUPLICATE,
                 "A patient with the same date of birth and the same name or phone number is already registered. "
                     + "Check the list, then confirm to register anyway.")
