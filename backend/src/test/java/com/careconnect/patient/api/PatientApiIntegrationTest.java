@@ -38,7 +38,7 @@ class PatientApiIntegrationTest {
         + "\"sex\":\"FEMALE\",\"phone\":\"98765 43210\",\"email\":\"asha@example.org\"}";
 
     private static String confirmed(String body) {
-        return body.replace("}", ",\"confirmedNotDuplicate\":true}");
+        return body.replace("}", ",\"confirmNotDuplicate\":true}");
     }
 
     @Autowired
