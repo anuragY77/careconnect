@@ -20,12 +20,12 @@ public record RegisterPatientRequest(
     @NotBlank @Size(max = 80) String lastName,
     @NotNull LocalDate dateOfBirth,
     @NotNull Sex sex,
-    @Size(max = 20) @Pattern(regexp = "|[0-9+()\\- ]{7,20}", message = "must be a phone number of 7 to 20 digits, spaces, + ( ) or -")
+    @Size(max = 20) @Pattern(regexp = PatientFieldRules.PHONE, message = PatientFieldRules.PHONE_MESSAGE)
     String phone,
     @Email @Size(max = 254) String email,
     @Size(max = 300) String address,
     @Size(max = 120) String emergencyContactName,
-    @Size(max = 20) @Pattern(regexp = "|[0-9+()\\- ]{7,20}", message = "must be a phone number of 7 to 20 digits, spaces, + ( ) or -")
+    @Size(max = 20) @Pattern(regexp = PatientFieldRules.PHONE, message = PatientFieldRules.PHONE_MESSAGE)
     String emergencyContactPhone,
     @Size(max = 120) String insuranceProvider,
     @Size(max = 60) String insurancePolicyNumber,
