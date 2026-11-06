@@ -11,12 +11,12 @@ import com.careconnect.patient.domain.Sex;
 public record PatientView(long patientId, String mrn, String firstName, String lastName, LocalDate dateOfBirth,
                           Sex sex, String phone, String email, String address, String emergencyContactName,
                           String emergencyContactPhone, String insuranceProvider, String insurancePolicyNumber,
-                          PatientStatus status, Instant createdAt) {
+                          PatientStatus status, Instant createdAt, long version) {
 
     static PatientView from(Patient p) {
         return new PatientView(p.getId(), p.getMrn(), p.getFirstName(), p.getLastName(), p.getDateOfBirth(),
             p.getSex(), p.getPhone(), p.getEmail(), p.getAddress(), p.getEmergencyContactName(),
             p.getEmergencyContactPhone(), p.getInsuranceProvider(), p.getInsurancePolicyNumber(),
-            p.getStatus(), p.getCreatedAt());
+            p.getStatus(), p.getCreatedAt(), p.getVersion());
     }
 }
