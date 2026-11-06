@@ -3,10 +3,12 @@ package com.careconnect.patient.service;
 import java.time.Clock;
 import java.time.LocalDate;
 import java.time.ZoneOffset;
+import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
+import java.util.Objects;
 import java.util.stream.Collectors;
 
 import com.careconnect.audit.domain.AuditAction;
@@ -52,7 +54,7 @@ public class PatientService {
      * nothing is saved and a POSSIBLE_DUPLICATE error lists them.
      */
     @Transactional
-    public PatientView register(NewPatient input, Boolean confirmedNotDuplicate) {
+    public PatientView register(NewPatient input, boolean confirmedNotDuplicate) {
         String firstName = name(input.firstName(), "First name");
         String lastName = name(input.lastName(), "Last name");
         requireValidDateOfBirth(input.dateOfBirth());
@@ -61,7 +63,7 @@ public class PatientService {
         }
         String phone = optional(input.phone());
         List<Patient> similar = findSimilar(firstName, lastName, input.dateOfBirth(), phone);
-        if (!similar.isEmpty() && !Boolean.TRUE.equals(confirmedNotDuplicate)) {
+        if (!similar.isEmpty() && !confirmedNotDuplicate) {
             throw new ApiException(ErrorCode.POSSIBLE_DUPLICATE,
                 "A patient with the same date of birth and the same name or phone number is already registered. "
                     + "Check the list, then confirm to register anyway.")
@@ -80,6 +82,72 @@ public class PatientService {
         }
         audit.record(entry);
         return PatientView.from(saved);
+    }
+
+    /**
+     * Replaces a patient's demographics (FR-07). {@code expectedVersion} is the version the caller saw; a
+     * different version means someone else changed the patient meanwhile and nothing is saved. The audit
+     * entry keeps before and after values of the identifying fields, and for address, emergency contact and
+     * insurance (free text and policy numbers) only the fact that they changed. A request that changes
+     * nothing saves and records nothing.
+     */
+    @Transactional
+    public PatientView update(long patientId, long expectedVersion, NewPatient input) {
+        Patient patient = patients.findById(patientId)
+            .orElseThrow(() -> new ApiException(ErrorCode.RESOURCE_NOT_FOUND, "Patient not found."));
+        if (patient.getVersion() != expectedVersion) {
+            throw new ApiException(ErrorCode.OPTIMISTIC_LOCK_CONFLICT,
+                "The patient was changed by someone else. Reload the record and try again.");
+        }
+        String firstName = name(input.firstName(), "First name");
+        String lastName = name(input.lastName(), "Last name");
+        requireValidDateOfBirth(input.dateOfBirth());
+        if (input.sex() == null) {
+            throw new ApiException(ErrorCode.VALIDATION_FAILED, "Sex is required.");
+        }
+        String phone = optional(input.phone());
+        String email = lowerOptional(input.email());
+        String address = optional(input.address());
+        String contactName = optional(input.emergencyContactName());
+        String contactPhone = optional(input.emergencyContactPhone());
+        String insurer = optional(input.insuranceProvider());
+        String policy = optional(input.insurancePolicyNumber());
+
+        List<String> changed = new ArrayList<>();
+        AuditEntry entry = AuditEntry.of(AuditAction.PATIENT_UPDATED, AuditOutcome.SUCCESS)
+            .on("PATIENT", patient.getId()).patient(patient.getId()).detail("mrn", patient.getMrn());
+        trackChange(changed, entry, "firstName", patient.getFirstName(), firstName, true);
+        trackChange(changed, entry, "lastName", patient.getLastName(), lastName, true);
+        trackChange(changed, entry, "dateOfBirth", patient.getDateOfBirth(), input.dateOfBirth(), true);
+        trackChange(changed, entry, "sex", patient.getSex(), input.sex(), true);
+        trackChange(changed, entry, "phone", patient.getPhone(), phone, true);
+        trackChange(changed, entry, "email", patient.getEmail(), email, true);
+        trackChange(changed, entry, "address", patient.getAddress(), address, false);
+        trackChange(changed, entry, "emergencyContactName", patient.getEmergencyContactName(), contactName, false);
+        trackChange(changed, entry, "emergencyContactPhone", patient.getEmergencyContactPhone(), contactPhone, false);
+        trackChange(changed, entry, "insuranceProvider", patient.getInsuranceProvider(), insurer, false);
+        trackChange(changed, entry, "insurancePolicyNumber", patient.getInsurancePolicyNumber(), policy, false);
+        if (changed.isEmpty()) {
+            return PatientView.from(patient);
+        }
+        patient.updateDemographics(firstName, lastName, input.dateOfBirth(), input.sex(), phone, email, address,
+            contactName, contactPhone, insurer, policy);
+        // Flush first: a conflicting save fails here, before any audit entry exists, and the view shows the new version.
+        patients.saveAndFlush(patient);
+        audit.record(entry.detail("changed", String.join(",", changed)));
+        return PatientView.from(patient);
+    }
+
+    private static void trackChange(List<String> changed, AuditEntry entry, String field, Object before,
+                                    Object after, boolean recordValues) {
+        if (Objects.equals(before, after)) {
+            return;
+        }
+        changed.add(field);
+        if (recordValues) {
+            entry.detail(field + ".before", before == null ? "(none)" : before)
+                .detail(field + ".after", after == null ? "(none)" : after);
+        }
     }
 
     /**
