@@ -15,6 +15,7 @@ public enum ErrorCode {
     METHOD_NOT_ALLOWED(405, "Method not allowed"),
     CONFLICT(409, "Conflict with existing data"),
     OPTIMISTIC_LOCK_CONFLICT(409, "Record was changed by someone else"),
+    POSSIBLE_DUPLICATE(409, "Possible duplicate"),
     UNSUPPORTED_MEDIA_TYPE(415, "Unsupported media type"),
     BUSINESS_RULE_VIOLATION(422, "Business rule violated"),
     TOO_MANY_REQUESTS(429, "Too many requests"),
