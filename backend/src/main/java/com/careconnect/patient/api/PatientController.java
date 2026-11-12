@@ -13,7 +13,9 @@ import org.springframework.data.domain.Page;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
@@ -57,5 +59,14 @@ public class PatientController {
         return ResponseEntity.created(URI.create("/api/patients/" + created.patientId()))
             .header(HttpHeaders.CACHE_CONTROL, "no-store")
             .body(created);
+    }
+
+    /** Replaces the demographics. The body carries the version the screen was showing (see {@link UpdatePatientRequest}). */
+    @PutMapping("/{id}")
+    @RegistrationStaff
+    public PatientResponse update(@PathVariable long id, @Valid @RequestBody UpdatePatientRequest request,
+                                  HttpServletResponse response) {
+        response.setHeader(HttpHeaders.CACHE_CONTROL, "no-store");
+        return PatientResponse.from(service.update(id, request.version(), request.toCommand()));
     }
 }
