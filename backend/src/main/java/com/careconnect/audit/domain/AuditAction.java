@@ -1,9 +1,5 @@
 package com.careconnect.audit.domain;
 
-/**
- * What happened. Stored by name; never rename a constant. New actions are added with the feature
- * that produces them.
- */
 public enum AuditAction {
     LOGIN,
     LOGOUT,
@@ -17,5 +13,7 @@ public enum AuditAction {
     PATIENT_REGISTERED,
     PATIENT_UPDATED,
     ALLERGY_ADDED,
-    ALLERGY_STATUS_CHANGED
+    ALLERGY_STATUS_CHANGED,
+    PROBLEM_ADDED,
+    PROBLEM_STATUS_CHANGED
 }
