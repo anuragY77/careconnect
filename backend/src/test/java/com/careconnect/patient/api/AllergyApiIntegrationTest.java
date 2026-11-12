@@ -79,7 +79,7 @@ class AllergyApiIntegrationTest {
         return "{\"substance\":\"" + substance + "\",\"reaction\":\"Rash\",\"severity\":\"SEVERE\"}";
     }
 
-    private static String status(long version, String status, String reason) {
+    private static String statusBody(long version, String status, String reason) {
         return "{\"version\":" + version + ",\"status\":\"" + status + "\""
             + (reason == null ? "" : ",\"reason\":\"" + reason + "\"") + "}";
     }
@@ -126,10 +126,10 @@ class AllergyApiIntegrationTest {
         for (Role role : new Role[] {Role.RECEPTIONIST, Role.PHARMACIST, Role.LAB_TECHNICIAN, Role.ADMIN}) {
             String token = login(role).token();
             add(token, patient, allergy("Other-" + role.name())).andExpect(status().isForbidden());
-            change(token, allergyId, status(0, "INACTIVE", "reason")).andExpect(status().isForbidden());
+            change(token, allergyId, statusBody(0, "INACTIVE", "reason")).andExpect(status().isForbidden());
         }
         add(null, patient, allergy("Anon")).andExpect(status().isUnauthorized());
-        change(null, allergyId, status(0, "INACTIVE", "reason")).andExpect(status().isUnauthorized());
+        change(null, allergyId, statusBody(0, "INACTIVE", "reason")).andExpect(status().isUnauthorized());
     }
 
     @Test
@@ -161,21 +161,21 @@ class AllergyApiIntegrationTest {
         String created = add(token, newPatient(), allergy("Penicillin")).andReturn().getResponse().getContentAsString();
         long id = ((Number) JsonPath.read(created, "$.allergyId")).longValue();
 
-        change(token, id, status(0, "INACTIVE", null))
+        change(token, id, statusBody(0, "INACTIVE", null))
             .andExpect(status().isBadRequest()).andExpect(jsonPath("$.code").value("VALIDATION_FAILED"));
-        change(token, id, status(0, "INACTIVE", "Outgrown"))
+        change(token, id, statusBody(0, "INACTIVE", "Outgrown"))
             .andExpect(status().isOk())
             .andExpect(header().string("Cache-Control", containsString("no-store")))
             .andExpect(jsonPath("$.status").value("INACTIVE"))
             .andExpect(jsonPath("$.statusReason").value("Outgrown"))
             .andExpect(jsonPath("$.version").value(1));
-        change(token, id, status(0, "ENTERED_IN_ERROR", "Wrong patient"))
+        change(token, id, statusBody(0, "ENTERED_IN_ERROR", "Wrong patient"))
             .andExpect(status().isConflict()).andExpect(jsonPath("$.code").value("OPTIMISTIC_LOCK_CONFLICT"));
-        change(token, id, status(1, "INACTIVE", "Again"))
+        change(token, id, statusBody(1, "INACTIVE", "Again"))
             .andExpect(status().isUnprocessableEntity()).andExpect(jsonPath("$.code").value("BUSINESS_RULE_VIOLATION"));
-        change(token, id, status(1, "ENTERED_IN_ERROR", "Wrong patient"))
+        change(token, id, statusBody(1, "ENTERED_IN_ERROR", "Wrong patient"))
             .andExpect(status().isOk()).andExpect(jsonPath("$.version").value(2));
-        change(token, id, status(2, "ACTIVE", null))
+        change(token, id, statusBody(2, "ACTIVE", null))
             .andExpect(status().isUnprocessableEntity()).andExpect(jsonPath("$.code").value("BUSINESS_RULE_VIOLATION"));
     }
 
@@ -183,7 +183,7 @@ class AllergyApiIntegrationTest {
     void anUnknownAllergyAndAMissingVersionAreRefused() throws Exception {
         String token = login(Role.DOCTOR).token();
 
-        change(token, 999_999_999L, status(0, "INACTIVE", "x")).andExpect(status().isNotFound());
+        change(token, 999_999_999L, statusBody(0, "INACTIVE", "x")).andExpect(status().isNotFound());
         change(token, 1, "{\"status\":\"INACTIVE\",\"reason\":\"x\"}")
             .andExpect(status().isBadRequest()).andExpect(jsonPath("$.errors[*].field").value(hasItem("version")));
     }
