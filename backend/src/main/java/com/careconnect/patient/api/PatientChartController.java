@@ -32,6 +32,14 @@ public class PatientChartController {
         return PatientResponse.from(service.open(actor(jwt), patientId));
     }
 
+    @GetMapping("/{patientId}/summary")
+    @ClinicalChartStaff
+    public ChartSummaryResponse summary(@PathVariable long patientId, @AuthenticationPrincipal Jwt jwt,
+                                        HttpServletResponse response) {
+        response.setHeader(HttpHeaders.CACHE_CONTROL, "no-store");
+        return ChartSummaryResponse.from(service.summary(actor(jwt), patientId));
+    }
+
     private static ChartActor actor(Jwt jwt) {
         Object patientClaim = jwt.getClaim(SecurityClaims.PATIENT_ID);
         Long patientId = patientClaim instanceof Number number ? number.longValue() : null;
